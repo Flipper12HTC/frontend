@@ -15,6 +15,31 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
+  apps/back-screen:
+    devDependencies:
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.0
+        version: 5.4.21(lightningcss@1.32.0)
+
+  apps/deco-screen:
+    dependencies:
+      three:
+        specifier: ^0.183.2
+        version: 0.183.2
+    devDependencies:
+      '@types/three':
+        specifier: ^0.183.1
+        version: 0.183.1
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.0
+        version: 5.4.21(lightningcss@1.32.0)
+
   apps/front-screen:
     dependencies:
       three:

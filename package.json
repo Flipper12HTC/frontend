@@ -5,6 +5,10 @@
   "description": "Flipper 12 frontend — 3D rendering on three physical screens driven by the backend via WebSocket",
   "scripts": {
     "dev": "pnpm --filter @flipper/front-screen dev",
+    "dev:front": "pnpm --filter @flipper/front-screen dev",
+    "dev:back": "pnpm --filter @flipper/back-screen dev",
+    "dev:deco": "pnpm --filter @flipper/deco-screen dev",
+    "dev:all": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "format": "prettier --write \"**/*.{ts,json,md,css,html}\"",
