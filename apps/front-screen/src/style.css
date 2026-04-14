@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@import "@flipper/design-system/theme.css";
+
 * {
   margin: 0;
   padding: 0;
@@ -6,9 +9,9 @@
 
 body {
   overflow: hidden;
-  background: #0a0a0f;
-  color: white;
-  font-family: system-ui, sans-serif;
+  background: var(--color-arcade-black);
+  color: var(--color-score-primary);
+  font-family: var(--font-body);
 }
 
 canvas {
