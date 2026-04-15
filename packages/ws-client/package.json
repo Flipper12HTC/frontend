@@ -1,5 +1,5 @@
 {
-  "name": "@flipper/contracts",
+  "name": "@flipper/ws-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",

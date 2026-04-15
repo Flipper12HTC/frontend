@@ -3,9 +3,9 @@
   "references": [
     { "path": "./tsconfig.node.json" },
     { "path": "./packages/contracts" },
+    { "path": "./packages/ws-client" },
     { "path": "./apps/front-screen" },
     { "path": "./apps/back-screen" },
     { "path": "./apps/deco-screen" }
   ]
 }
-

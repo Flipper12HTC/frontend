@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@flipper/design-system": "workspace:*"
+    "@flipper/design-system": "workspace:*",
+    "@flipper/ws-client": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
