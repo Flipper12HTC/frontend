@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { TABLE } from '@flipper/contracts';
 
 export interface SceneContext {
   scene: THREE.Scene;
@@ -36,44 +37,45 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   scene.add(pointLight);
 
   const base = new THREE.Mesh(
-    new THREE.BoxGeometry(16, 0.3, 9),
+    new THREE.BoxGeometry(TABLE.width, TABLE.floorThickness, TABLE.depth),
     new THREE.MeshStandardMaterial({ color: 0x06402b }),
   );
   scene.add(base);
 
-
   const textureLoader = new THREE.TextureLoader();
   const cuirTexture = textureLoader.load('/cuir.jpg');
   const wallMaterial = new THREE.MeshStandardMaterial({ map: cuirTexture });
-  const wallHeight = 1;
-  const wallThickness = 0.3;
+  const { height: wallHeight, thickness: wallThickness } = TABLE.wall;
+  const wallLongSize = TABLE.width + wallThickness;
+  const halfW = TABLE.width / 2;
+  const halfD = TABLE.depth / 2;
 
   const wallLeft = new THREE.Mesh(
-    new THREE.BoxGeometry(wallThickness, wallHeight, 9),
+    new THREE.BoxGeometry(wallThickness, wallHeight, TABLE.depth),
     wallMaterial,
   );
-  wallLeft.position.set(-8, wallHeight / 2, 0);
+  wallLeft.position.set(-halfW, wallHeight / 2, 0);
   scene.add(wallLeft);
 
   const wallRight = new THREE.Mesh(
-    new THREE.BoxGeometry(wallThickness, wallHeight, 9),
+    new THREE.BoxGeometry(wallThickness, wallHeight, TABLE.depth),
     wallMaterial,
   );
-  wallRight.position.set(8, wallHeight / 2, 0);
+  wallRight.position.set(halfW, wallHeight / 2, 0);
   scene.add(wallRight);
 
   const wallTop = new THREE.Mesh(
-    new THREE.BoxGeometry(16.6, wallHeight, wallThickness),
+    new THREE.BoxGeometry(wallLongSize, wallHeight, wallThickness),
     wallMaterial,
   );
-  wallTop.position.set(0, wallHeight / 2, -4.5);
+  wallTop.position.set(0, wallHeight / 2, -halfD);
   scene.add(wallTop);
 
   const wallBottom = new THREE.Mesh(
-    new THREE.BoxGeometry(16.6, wallHeight, wallThickness),
+    new THREE.BoxGeometry(wallLongSize, wallHeight, wallThickness),
     wallMaterial,
   );
-  wallBottom.position.set(0, wallHeight / 2, 4.5);
+  wallBottom.position.set(0, wallHeight / 2, halfD);
   scene.add(wallBottom);
 
   const gridHelper = new THREE.GridHelper(40, 40);
