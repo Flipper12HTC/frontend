@@ -17,6 +17,7 @@
     "vite": "^5.4.0"
   },
   "dependencies": {
+    "@flipper/contracts": "workspace:*",
     "@flipper/design-system": "workspace:*",
     "@flipper/ws-client": "workspace:*",
     "three": "^0.183.2"
