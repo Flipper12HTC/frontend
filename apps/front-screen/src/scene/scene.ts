@@ -1,8 +1,9 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
 export interface SceneContext {
   scene: THREE.Scene;
-  camera: THREE.OrthographicCamera;
+  camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
   render: () => void;
   resize: () => void;
@@ -12,58 +13,86 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0a0f);
 
-  const aspect = window.innerWidth / window.innerHeight;
-  const frustum = 12;
-  const camera = new THREE.OrthographicCamera(
-    -frustum * aspect,
-    frustum * aspect,
-    frustum,
-    -frustum,
+
+  const camera = new THREE.PerspectiveCamera(
+    50,
+    window.innerWidth / window.innerHeight,
     0.1,
-    100,
+    1000,
   );
-  camera.position.set(0, 10, 20);
+  camera.position.set(0, 20, 20);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambient);
 
-  const dir = new THREE.DirectionalLight(0xa855f7, 1.5);
-  dir.position.set(5, 10, 5);
-  scene.add(dir);
+  const pointLight = new THREE.PointLight(0xffffff, 200);
+  pointLight.position.set(0, 15, 5);
+  scene.add(pointLight);
 
-  const tableGeo = new THREE.PlaneGeometry(16, 24);
-  const tableMat = new THREE.MeshStandardMaterial({
-    color: 0x12121a,
-    roughness: 0.8,
-  });
-  const table = new THREE.Mesh(tableGeo, tableMat);
-  table.rotation.x = -Math.PI / 2;
-  scene.add(table);
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(16, 0.3, 9),
+    new THREE.MeshStandardMaterial({ color: 0x06402b }),
+  );
+  scene.add(base);
 
-  const borderGeo = new THREE.EdgesGeometry(tableGeo);
-  const borderMat = new THREE.LineBasicMaterial({ color: 0xa855f7 });
-  const border = new THREE.LineSegments(borderGeo, borderMat);
-  border.rotation.x = -Math.PI / 2;
-  scene.add(border);
+
+  const textureLoader = new THREE.TextureLoader();
+  const cuirTexture = textureLoader.load('/cuir.jpg');
+  const wallMaterial = new THREE.MeshStandardMaterial({ map: cuirTexture });
+  const wallHeight = 1;
+  const wallThickness = 0.3;
+
+  const wallLeft = new THREE.Mesh(
+    new THREE.BoxGeometry(wallThickness, wallHeight, 9),
+    wallMaterial,
+  );
+  wallLeft.position.set(-8, wallHeight / 2, 0);
+  scene.add(wallLeft);
+
+  const wallRight = new THREE.Mesh(
+    new THREE.BoxGeometry(wallThickness, wallHeight, 9),
+    wallMaterial,
+  );
+  wallRight.position.set(8, wallHeight / 2, 0);
+  scene.add(wallRight);
+
+  const wallTop = new THREE.Mesh(
+    new THREE.BoxGeometry(16.6, wallHeight, wallThickness),
+    wallMaterial,
+  );
+  wallTop.position.set(0, wallHeight / 2, -4.5);
+  scene.add(wallTop);
+
+  const wallBottom = new THREE.Mesh(
+    new THREE.BoxGeometry(16.6, wallHeight, wallThickness),
+    wallMaterial,
+  );
+  wallBottom.position.set(0, wallHeight / 2, 4.5);
+  scene.add(wallBottom);
+
+  const gridHelper = new THREE.GridHelper(40, 40);
+  scene.add(gridHelper);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
 
   function render(): void {
+    controls.update();
     renderer.render(scene, camera);
   }
 
   function resize(): void {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const a = w / h;
-    camera.left = -frustum * a;
-    camera.right = frustum * a;
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   return { scene, camera, renderer, render, resize };
 }
+
