@@ -25,10 +25,6 @@ export function connectToBackend(handlers: {
 }): void {
   createWsClient({
     url: WS_URL,
-    onOpen() {
-    },
-    onClose() {
-    },
     onMessage(data: unknown) {
       const msg = data as WsMessage;
 
