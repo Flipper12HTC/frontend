@@ -22,11 +22,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: [
-      '**/dist/**',
-      '**/node_modules/**',
-      '**/*.config.ts',
-      'pnpm-lock.yaml',
-    ],
+    ignores: ['**/dist/**', '**/node_modules/**', '**/*.config.ts', 'pnpm-lock.yaml', '**/mock/**'],
   },
 );

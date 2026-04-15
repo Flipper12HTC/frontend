@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "@flipper/design-system/theme.css";
+@import 'tailwindcss';
+@import '@flipper/design-system/theme.css';
 
 * {
   margin: 0;

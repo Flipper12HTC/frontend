@@ -5,9 +5,5 @@
     "moduleResolution": "NodeNext",
     "types": ["node"]
   },
-  "include": [
-    "eslint.config.ts",
-    "prettier.config.*",
-    "vite.config.*"
-  ]
+  "include": ["eslint.config.ts", "prettier.config.*", "vite.config.*"]
 }
