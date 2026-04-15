@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@flipper/design-system": "workspace:*",
+    "@flipper/ws-client": "workspace:*",
     "three": "^0.183.2"
   }
 }
