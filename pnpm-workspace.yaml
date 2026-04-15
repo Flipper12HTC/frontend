@@ -1,5 +1,6 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "packages/ws-client/mock"
 allowBuilds:
   esbuild: true

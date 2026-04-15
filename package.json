@@ -10,6 +10,7 @@
     "dev:back": "pnpm --filter @flipper/back-screen dev",
     "dev:deco": "pnpm --filter @flipper/deco-screen dev",
     "dev:all": "pnpm -r --parallel dev",
+    "dev:standalone": "pnpm --filter @flipper/mock-backend dev & pnpm dev:all",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
