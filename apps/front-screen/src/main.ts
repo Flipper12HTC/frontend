@@ -1,6 +1,7 @@
 import './style.css';
 import { createScene } from './scene/scene';
 import { createBall } from './meshes/ball';
+import { createFlippers } from './meshes/flippers';
 import { connectToBackend } from './net/ws';
 
 const canvas = document.createElement('canvas');
@@ -8,6 +9,7 @@ document.body.appendChild(canvas);
 
 const { scene, render, resize } = createScene(canvas);
 const ball = createBall(scene);
+createFlippers(scene);
 
 connectToBackend({
   onBallPosition(pos) {
