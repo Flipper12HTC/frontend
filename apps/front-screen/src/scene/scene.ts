@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { TABLE } from '@flipper/contracts';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+
 
 export interface SceneContext {
   scene: THREE.Scene;
@@ -15,12 +17,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   scene.background = new THREE.Color(0x0a0a0f);
 
 
-  const camera = new THREE.PerspectiveCamera(
-    50,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000,
-  );
+  const camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000, );
   camera.position.set(0, 20, 20);
   camera.lookAt(0, 0, 0);
 
@@ -36,13 +33,29 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   pointLight.position.set(0, 15, 5);
   scene.add(pointLight);
 
+  const textureLoader = new THREE.TextureLoader();
+
+  const grassColor = textureLoader.load('/grass/Grass002_8K-JPG_Color.jpg');
+  const grassNormal = textureLoader.load('/grass/Grass002_8K-JPG_NormalGL.jpg');
+  const grassDisplace = textureLoader.load('/grass/Grass002_8K-JPG_Displacement.jpg');
+
+  [grassColor, grassNormal, grassDisplace].forEach((t) => {
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(4, 2);
+  });
+
   const base = new THREE.Mesh(
-    new THREE.BoxGeometry(TABLE.width, TABLE.floorThickness, TABLE.depth),
-    new THREE.MeshStandardMaterial({ color: 0x06402b }),
+    new THREE.BoxGeometry(TABLE.width, TABLE.floorThickness, TABLE.depth, 64, 1, 64),
+    new THREE.MeshStandardMaterial({
+      map: grassColor,
+      normalMap: grassNormal,
+      displacementMap: grassDisplace,
+      displacementScale: 0.05,
+    }),
   );
   scene.add(base);
 
-  const textureLoader = new THREE.TextureLoader();
   const cuirTexture = textureLoader.load('/cuir.jpg');
   const wallMaterial = new THREE.MeshStandardMaterial({ map: cuirTexture });
   const { height: wallHeight, thickness: wallThickness } = TABLE.wall;
