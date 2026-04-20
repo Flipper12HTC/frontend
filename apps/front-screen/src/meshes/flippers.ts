@@ -8,23 +8,66 @@ export interface Flipper {
 
 function buildFlipper(scene: THREE.Scene, side: 'left' | 'right'): Flipper {
   const isLeft = side === 'left';
-  const pos = isLeft ? TABLE.flippers.left : TABLE.flippers.right;
   const group = new THREE.Group();
 
+  // Corps principal — effilé, sombre et métallique
   const body = new THREE.Mesh(
     new THREE.CylinderGeometry(
-      isLeft ? 0.15 : 0.05,
-      isLeft ? 0.05 : 0.15,
-      1.5,
-      8,
+      isLeft ? 0.15 : 0.04,
+      isLeft ? 0.04 : 0.15,
+      1.8,
+      16,
     ),
-    new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.2, roughness: 0.2 }),
+    new THREE.MeshStandardMaterial({
+      color: 0x8b5e3c,
+      metalness: 0,
+      roughness: 0.85,
+    }),
   );
   body.rotation.z = Math.PI / 2;
-  body.position.x = isLeft ? 0.75 : -0.75;
+  body.position.x = isLeft ? 0.9 : -0.9;
   group.add(body);
 
-  group.position.set(isLeft ? -1.8 : 1.8, pos.y, 6.5);
+  // Liseré néon sur le dessus
+  const glowGeo = new THREE.CylinderGeometry(
+    isLeft ? 0.155 : 0.045,
+    isLeft ? 0.045 : 0.155,
+    1.82,
+    16,
+    1,
+    true,
+  );
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: 0xa855f7,
+    emissive: 0xa855f7,
+    emissiveIntensity: 0.8,
+    transparent: true,
+    opacity: 0.4,
+    side: THREE.BackSide,
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.rotation.z = Math.PI / 2;
+  glow.position.x = isLeft ? 0.9 : -0.9;
+  group.add(glow);
+
+  // Pivot sphérique
+  const pivot = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 16, 16),
+    new THREE.MeshStandardMaterial({
+      color: 0xa855f7,
+      emissive: 0xa855f7,
+      emissiveIntensity: 0.6,
+      metalness: 1,
+      roughness: 0.1,
+    }),
+  );
+  group.add(pivot);
+
+  // Lumière portée
+  const light = new THREE.PointLight(0xa855f7, 1.5, 2.5);
+  group.add(light);
+
+  group.position.set(isLeft ? -1.8 : 1.8, TABLE.flippers.left.y, 6.5);
   group.rotation.y = TABLE.flippers.restAngle * (isLeft ? 1 : -1);
   scene.add(group);
 
