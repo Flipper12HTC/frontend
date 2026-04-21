@@ -1,7 +1,7 @@
 import './style.css';
-import { createScene } from './scene/scene';
-import { createBall } from './meshes/ball';
-import { connectToBackend } from './net/ws';
+import { createScene } from './adapters/scene/scene';
+import { createBall } from './adapters/meshes/ball';
+import { connectToBackend } from './infrastructure/ws';
 
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
