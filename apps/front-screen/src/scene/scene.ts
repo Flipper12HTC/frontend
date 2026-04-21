@@ -41,7 +41,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     t.repeat.set(4, 6);
   });
 
-  // TABLE.depth = 9 → largeur (X), TABLE.width = 16 → longueur (Z)
+  // Mesure terrain
   const W = TABLE.depth;
   const L = TABLE.width;
   const halfW = W / 2;
@@ -53,16 +53,36 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     new THREE.MeshStandardMaterial({
       map: grassColor,
       normalMap: grassNormal,
-      normalScale: new THREE.Vector2(1.5, 1.5),
+      normalScale: new THREE.Vector2(90, 90),
       displacementMap: grassDisplace,
-      displacementScale: 0.08,
-      displacementBias: -0.04,
+      displacementScale: 0.5,
+      displacementBias: -0.001,
     }),
   );
   scene.add(base);
 
-  const cuirTexture = textureLoader.load('/cuir.jpg');
-  const wallMaterial = new THREE.MeshStandardMaterial({ map: cuirTexture });
+  const leatherColor = textureLoader.load('/leatherwall2k/Leather011_2K-JPG_Color.jpg');
+  const leatherNormal = textureLoader.load('/leatherwall2k/Leather011_2K-JPG_NormalGL.jpg');
+  const leatherDisplace = textureLoader.load('/leatherwall2k/Leather011_2K-JPG_Displacement.jpg');
+  const leatherRoughness = textureLoader.load('/leatherwall2k/Leather011_2K-JPG_Roughness.jpg');
+
+  [leatherColor, leatherNormal, leatherDisplace, leatherRoughness].forEach((t) => {
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(2, 1);
+  });
+
+  const wallMaterial = new THREE.MeshStandardMaterial({
+    map: leatherColor,
+    normalMap: leatherNormal,
+    normalScale: new THREE.Vector2(1.5, 1.5),
+    displacementMap: leatherDisplace,
+    displacementScale: 0.0,
+    displacementBias: 0,
+    roughnessMap: leatherRoughness,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
 
   // Murs gauche et droit (le long de la longueur Z)
   const wallLeft = new THREE.Mesh(

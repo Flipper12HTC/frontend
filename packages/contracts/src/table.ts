@@ -1,11 +1,10 @@
 export const TABLE = {
   width: 16,
   depth: 9,
-  floorThickness: 0.3,
-
+  floorThickness: 0.04,
   wall: {
-    height: 1,
-    thickness: 0.3,
+    height: 1.3,
+    thickness: 0.2,
   },
 
   flippers: {
