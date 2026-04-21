@@ -4,7 +4,7 @@ export const TABLE = {
   floorThickness: 0.04,
   wall: {
     height: 1.3,
-    thickness: 0.2,
+    thickness: 0.4,
   },
 
   flippers: {
