@@ -35,9 +35,15 @@ importers:
 
   apps/back-screen:
     dependencies:
+      '@flipper/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@flipper/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
+      '@flipper/game-sources':
+        specifier: workspace:*
+        version: link:../../packages/game-sources
       '@flipper/ws-client':
         specifier: workspace:*
         version: link:../../packages/ws-client
@@ -57,9 +63,15 @@ importers:
 
   apps/deco-screen:
     dependencies:
+      '@flipper/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@flipper/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
+      '@flipper/game-sources':
+        specifier: workspace:*
+        version: link:../../packages/game-sources
       '@flipper/ws-client':
         specifier: workspace:*
         version: link:../../packages/ws-client
@@ -91,6 +103,9 @@ importers:
       '@flipper/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
+      '@flipper/game-sources':
+        specifier: workspace:*
+        version: link:../../packages/game-sources
       '@flipper/ws-client':
         specifier: workspace:*
         version: link:../../packages/ws-client
@@ -121,6 +136,15 @@ importers:
       tailwindcss:
         specifier: '>=4.0.0'
         version: 4.2.2
+
+  packages/game-sources:
+    dependencies:
+      '@flipper/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@flipper/ws-client':
+        specifier: workspace:*
+        version: link:../ws-client
 
   packages/ws-client: {}
 

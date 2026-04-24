@@ -1,3 +1,13 @@
-// Cross-repo contracts. Synced from flipper12-backend/contracts/dist/ts/.
-// Do not edit by hand. Pinned version: 0.0.0
 export { TABLE } from './table';
+export type {
+  BallPositionEvent,
+  ScoreUpdateEvent,
+  BallDrainedEvent,
+  BumperHitEvent,
+  SlingshotHitEvent,
+  GameOverEvent,
+  FlipperStateEvent,
+  GameEvent,
+  GameEventType,
+} from './events';
+export type { GameSource, InputSink, FlipperSide, Unsubscribe } from './ports';

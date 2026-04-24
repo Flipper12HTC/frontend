@@ -14,7 +14,6 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0a0f);
 
-
   const camera = new THREE.PerspectiveCamera(
     50,
     window.innerWidth / window.innerHeight,
@@ -27,7 +26,6 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambient);
@@ -97,4 +95,3 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
 
   return { scene, camera, renderer, render, resize };
 }
-
