@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@flipper/contracts": "workspace:*",
     "@flipper/design-system": "workspace:*",
+    "@flipper/game-sources": "workspace:*",
     "@flipper/ws-client": "workspace:*"
   },
   "devDependencies": {

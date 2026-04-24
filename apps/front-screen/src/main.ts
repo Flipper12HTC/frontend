@@ -1,25 +1,45 @@
 import './style.css';
+import type { GameSource } from './application/ports/game-source';
+import { createRendererOrchestrator } from './application/renderer-orchestrator';
+import { KeyboardInput } from './infrastructure/keyboard-input';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
-import { connectToBackend } from './infrastructure/ws';
+import { createHud } from './adapters/hud/hud';
+import { MockGameSource, WsGameSource } from '@flipper/game-sources';
+
+const WS_URL = 'ws://localhost:8080/ws';
+
+function pickSource(): GameSource {
+  const kind = import.meta.env.VITE_GAME_SOURCE ?? (import.meta.env.DEV ? 'mock' : 'ws');
+  if (kind === 'ws') {
+    return new WsGameSource({ url: WS_URL });
+  }
+  return new MockGameSource();
+}
 
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 
 const { scene, render, resize } = createScene(canvas);
 const ball = createBall(scene);
+const hud = createHud();
+hud.mount();
 
-connectToBackend({
-  onBallPosition(pos) {
-    ball.setPosition(pos.x, pos.y, pos.z);
+const source = pickSource();
+const input = new KeyboardInput();
+
+const orchestrator = createRendererOrchestrator(source, input, {
+  onBallMoved(position) {
+    ball.setPosition(position);
   },
-  onScoreUpdate(data) {
-    // back-screen handles score display
-    // nothing to do here for the POC
-    void data;
+  onFlipperChanged(state) {
+    hud.setStatus(`flipper ${state.side} ${state.active ? 'active' : 'rest'}`);
+  },
+  onScoreChanged(score, ballsLeft) {
+    hud.setStatus(`score ${String(score)} · balls ${String(ballsLeft)}`);
   },
   onGameOver(finalScore) {
-    void finalScore;
+    hud.showGameOver(finalScore);
   },
 });
 
@@ -30,4 +50,5 @@ function loop(): void {
   render();
 }
 
+orchestrator.start();
 loop();

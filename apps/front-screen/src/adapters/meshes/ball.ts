@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { TABLE } from '@flipper/contracts';
+import type { BallPosition } from '../../domain/game-state';
 
 export interface Ball {
   mesh: THREE.Mesh;
-  setPosition: (x: number, y: number, z: number) => void;
+  setPosition: (position: BallPosition) => void;
 }
 
 export function createBall(scene: THREE.Scene): Ball {
@@ -22,8 +23,8 @@ export function createBall(scene: THREE.Scene): Ball {
 
   return {
     mesh,
-    setPosition(x: number, y: number, z: number): void {
-      mesh.position.set(x, TABLE.ball.spawn.y, z === 0 ? y : z);
+    setPosition(position: BallPosition): void {
+      mesh.position.set(position.x, TABLE.ball.spawn.y, position.z);
     },
   };
 }
