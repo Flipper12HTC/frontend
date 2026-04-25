@@ -48,6 +48,10 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const halfL = L / 2;
   const { height: wallHeight, thickness: wallThickness } = TABLE.wall;
 
+  const tableGroup = new THREE.Group();
+  tableGroup.rotation.x = THREE.MathUtils.degToRad(6.5);
+  scene.add(tableGroup);
+
   const base = new THREE.Mesh(
     new THREE.BoxGeometry(W, TABLE.floorThickness, L, 32, 1, 64),
     new THREE.MeshStandardMaterial({
@@ -59,7 +63,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
       displacementBias: -0.001,
     }),
   );
-  scene.add(base);
+  tableGroup.add(base);
 
   const leatherColor = textureLoader.load('/leatherwall2k/Leather011_2K-JPG_Color.jpg');
   const leatherNormal = textureLoader.load('/leatherwall2k/Leather011_2K-JPG_NormalGL.jpg');
@@ -90,14 +94,14 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     wallMaterial,
   );
   wallLeft.position.set(-halfW, wallHeight / 2, 0);
-  scene.add(wallLeft);
+  tableGroup.add(wallLeft);
 
   const wallRight = new THREE.Mesh(
     new THREE.BoxGeometry(wallThickness, wallHeight, L),
     wallMaterial,
   );
   wallRight.position.set(halfW, wallHeight / 2, 0);
-  scene.add(wallRight);
+  tableGroup.add(wallRight);
 
   // Mur haut
   const wallTop = new THREE.Mesh(
@@ -105,7 +109,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     wallMaterial,
   );
   wallTop.position.set(0, wallHeight / 2, -halfL);
-  scene.add(wallTop);
+  tableGroup.add(wallTop);
 
   // Mur bas avec trou au centre
   const drainWidth = 1.5;
@@ -116,14 +120,14 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     wallMaterial,
   );
   wallBottomLeft.position.set(-halfW + sideWallWidth / 2, wallHeight / 2, halfL);
-  scene.add(wallBottomLeft);
+  tableGroup.add(wallBottomLeft);
 
   const wallBottomRight = new THREE.Mesh(
     new THREE.BoxGeometry(sideWallWidth, wallHeight, wallThickness),
     wallMaterial,
   );
   wallBottomRight.position.set(halfW - sideWallWidth / 2, wallHeight / 2, halfL);
-  scene.add(wallBottomRight);
+  tableGroup.add(wallBottomRight);
 
   const gridHelper = new THREE.GridHelper(40, 40);
   scene.add(gridHelper);
