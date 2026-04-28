@@ -4,6 +4,7 @@ import { createRendererOrchestrator } from './application/renderer-orchestrator'
 import { KeyboardInput } from './infrastructure/keyboard-input';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
+import { createFlipper } from './adapters/meshes/flipper';
 import { createHud } from './adapters/hud/hud';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
 
@@ -22,6 +23,8 @@ document.body.appendChild(canvas);
 
 const { scene, render, resize } = createScene(canvas);
 const ball = createBall(scene);
+const flipperLeft = createFlipper(scene, { side: 'left' });
+const flipperRight = createFlipper(scene, { side: 'right' });
 const hud = createHud();
 hud.mount();
 
@@ -33,6 +36,8 @@ const orchestrator = createRendererOrchestrator(source, input, {
     ball.setPosition(position);
   },
   onFlipperChanged(state) {
+    flipperLeft.setState(state);
+    flipperRight.setState(state);
     hud.setStatus(`flipper ${state.side} ${state.active ? 'active' : 'rest'}`);
   },
   onScoreChanged(score, ballsLeft) {
