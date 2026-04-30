@@ -18,10 +18,16 @@ interface WsMessage {
   payload: unknown;
 }
 
+interface FlipperStatePayload {
+  leftAngle: number;
+  rightAngle: number;
+}
+
 export function connectToBackend(handlers: {
   onBallPosition: (pos: BallPositionPayload) => void;
   onScoreUpdate: (data: ScoreUpdatePayload) => void;
   onGameOver: (finalScore: number) => void;
+  onFlipperState?: (state: FlipperStatePayload) => void;
 }): void {
   createWsClient({
     url: WS_URL,
@@ -39,6 +45,10 @@ export function connectToBackend(handlers: {
       if (msg.type === 'game_over') {
         const payload = msg.payload as { finalScore: number };
         handlers.onGameOver(payload.finalScore);
+      }
+
+      if (msg.type === 'flipper_state') {
+        handlers.onFlipperState?.(msg.payload as FlipperStatePayload);
       }
     },
   });

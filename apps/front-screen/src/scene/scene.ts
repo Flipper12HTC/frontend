@@ -7,6 +7,7 @@ export interface SceneContext {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
+  tableGroup: THREE.Group;
   render: () => void;
   resize: () => void;
 }
@@ -309,5 +310,5 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  return { scene, camera, renderer, render, resize };
+  return { scene, camera, renderer, tableGroup, render, resize };
 }
