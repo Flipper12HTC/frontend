@@ -20,7 +20,12 @@ export function createScoreboardView(root: HTMLElement): ScoreboardView {
   overlayEl.className =
     'mt-4 text-score-md font-display text-neon-pink uppercase tracking-widest';
 
-  root.append(scoreEl, metaEl, overlayEl);
+  const qrZone = document.createElement('div');
+  qrZone.id = 'qr-zone';
+  qrZone.className = 'mt-6 min-h-[200px] flex items-center justify-center';
+  qrZone.style.display = 'none';
+
+  root.append(scoreEl, metaEl, overlayEl, qrZone);
 
   return {
     render(state: Scoreboard): void {
