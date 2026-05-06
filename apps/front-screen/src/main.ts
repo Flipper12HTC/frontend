@@ -1,13 +1,15 @@
 import './style.css';
 import type { GameSource } from './application/ports/game-source';
 import { createRendererOrchestrator } from './application/renderer-orchestrator';
-import { KeyboardInput } from './infrastructure/keyboard-input';
+import { attachKeyboardForwarder } from './infrastructure/keyboard-forwarder';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
 
 const WS_URL = 'ws://localhost:8080/ws';
+const BACKEND_URL =
+  (import.meta.env.VITE_BACKEND_URL as string | undefined) ?? 'http://localhost:8080';
 
 function pickSource(): GameSource {
   const kind = import.meta.env.VITE_GAME_SOURCE ?? (import.meta.env.DEV ? 'mock' : 'ws');
@@ -26,9 +28,8 @@ const flipperLeft = createFlipper(scene, { side: 'left' });
 const flipperRight = createFlipper(scene, { side: 'right' });
 
 const source = pickSource();
-const input = new KeyboardInput();
 
-const orchestrator = createRendererOrchestrator(source, input, {
+const orchestrator = createRendererOrchestrator(source, {
   onBallMoved(position) {
     ball.setPosition(position);
     ball.setVisible(true);
@@ -41,6 +42,8 @@ const orchestrator = createRendererOrchestrator(source, input, {
     ball.setVisible(false);
   },
 });
+
+attachKeyboardForwarder({ backendUrl: BACKEND_URL });
 
 window.addEventListener('resize', resize);
 

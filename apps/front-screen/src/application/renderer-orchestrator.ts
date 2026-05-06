@@ -1,5 +1,4 @@
 import type { GameSource } from './ports/game-source';
-import type { FlipperSide, InputSink } from './ports/input-sink';
 import type { BallPosition, FlipperState } from '../domain/game-state';
 
 export interface RendererCallbacks {
@@ -16,7 +15,6 @@ export interface Orchestrator {
 
 export function createRendererOrchestrator(
   source: GameSource,
-  input: InputSink,
   callbacks: RendererCallbacks,
 ): Orchestrator {
   const unsubs: (() => void)[] = [];
@@ -48,28 +46,17 @@ export function createRendererOrchestrator(
         }),
       );
     }
-
-    unsubs.push(
-      input.onPress((side: FlipperSide) => {
-        callbacks.onFlipperChanged({ side, active: true });
-      }),
-      input.onRelease((side: FlipperSide) => {
-        callbacks.onFlipperChanged({ side, active: false });
-      }),
-    );
   }
 
   return {
     start(): void {
       subscribe();
-      input.start();
       source.start();
     },
     stop(): void {
       for (const u of unsubs) u();
       unsubs.length = 0;
       source.stop();
-      input.stop();
     },
   };
 }

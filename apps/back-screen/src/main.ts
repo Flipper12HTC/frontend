@@ -2,6 +2,7 @@ import './style.css';
 import type { GameSource } from './application/ports/game-source';
 import { createRendererOrchestrator } from './application/renderer-orchestrator';
 import { createScoreboardView } from './adapters/components/scoreboard-view';
+import { attachKeyboardForwarder } from './infrastructure/keyboard-forwarder';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
 
 const WS_URL = 'ws://localhost:8080/ws';
@@ -16,32 +17,37 @@ function pickSource(): GameSource {
   return new MockGameSource();
 }
 
+const source = pickSource();
+let currentStatus: 'idle' | 'running' | 'over' = 'idle';
+let lastStartAt = 0;
+
+source.on('score_update', () => {
+  currentStatus = 'running';
+});
+source.on('game_over', () => {
+  currentStatus = 'over';
+});
+
+function requestStart(): void {
+  if (currentStatus === 'running') return;
+  const now = Date.now();
+  if (now - lastStartAt < 500) return;
+  lastStartAt = now;
+  void fetch(`${BACKEND_URL}/game/start`, { method: 'POST' }).catch(() => undefined);
+}
+
 const root = document.createElement('main');
 root.id = 'root';
 document.body.appendChild(root);
 
-const view = createScoreboardView(root, {
-  onStart: () => {
-    void requestStart();
-  },
-});
-
-const orchestrator = createRendererOrchestrator(pickSource(), view);
+const view = createScoreboardView(root, { onStart: requestStart });
+const orchestrator = createRendererOrchestrator(source, view);
 orchestrator.start();
 
-let lastStartAt = 0;
-
-async function requestStart(): Promise<void> {
-  if (orchestrator.getStatus() === 'running') return;
-  const now = Date.now();
-  if (now - lastStartAt < 500) return;
-  lastStartAt = now;
-  try {
-    await fetch(`${BACKEND_URL}/game/start`, { method: 'POST' });
-  } catch {
-    /* backend unreachable */
-  }
-}
+attachKeyboardForwarder({
+  backendUrl: BACKEND_URL,
+  isStartAllowed: () => currentStatus !== 'running',
+});
 
 interface GameStateDto {
   status?: string;
@@ -55,16 +61,8 @@ fetch(`${BACKEND_URL}/game/state`)
   .then((data) => {
     if (!data) return;
     if (data.status === 'running' || data.status === 'over' || data.status === 'idle') {
+      currentStatus = data.status;
       orchestrator.setStatus(data.status);
     }
   })
-  .catch(() => {
-    /* backend unreachable */
-  });
-
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') {
-    e.preventDefault();
-    void requestStart();
-  }
-});
+  .catch(() => undefined);
