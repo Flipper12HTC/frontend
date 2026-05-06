@@ -47,6 +47,7 @@ attachKeyboardForwarder({ backendUrl: BACKEND_URL });
 
 window.addEventListener('resize', resize);
 
+
 function loop(): void {
   requestAnimationFrame(loop);
   render();

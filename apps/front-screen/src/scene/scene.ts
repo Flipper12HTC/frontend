@@ -150,22 +150,6 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   wallTop.position.set(0, wallHeight / 2, -halfL);
   tableGroup.add(wallTop);
 
-  const drainWidth = 1.8;
-  const sideWidth = (W - drainWidth) / 2;
-
-  const wallBottomLeft = new THREE.Mesh(
-    new THREE.BoxGeometry(sideWidth, wallHeight, wallThickness),
-    wallMaterial,
-  );
-  wallBottomLeft.position.set(-halfW + sideWidth / 2, wallHeight / 2, halfL);
-  tableGroup.add(wallBottomLeft);
-
-  const wallBottomRight = new THREE.Mesh(
-    new THREE.BoxGeometry(sideWidth, wallHeight, wallThickness),
-    wallMaterial,
-  );
-  wallBottomRight.position.set(halfW - sideWidth / 2, wallHeight / 2, halfL);
-  tableGroup.add(wallBottomRight);
 
   // Zones de glace : disques réfléchissants sur la surface
   const iceMaterial = new THREE.MeshStandardMaterial({
