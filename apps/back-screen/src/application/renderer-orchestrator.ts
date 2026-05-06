@@ -4,6 +4,8 @@ import {
   withBallDrained,
   withGameOver,
   withScore,
+  withStatus,
+  type GameStatus,
   type Scoreboard,
 } from '../domain/scoreboard';
 
@@ -14,6 +16,8 @@ export interface ScoreboardView {
 export interface Orchestrator {
   start: () => void;
   stop: () => void;
+  setStatus: (status: GameStatus) => void;
+  getStatus: () => GameStatus;
 }
 
 export function createRendererOrchestrator(
@@ -49,6 +53,12 @@ export function createRendererOrchestrator(
       for (const u of unsubs) u();
       unsubs.length = 0;
       source.stop();
+    },
+    setStatus(status: GameStatus): void {
+      update(withStatus(state, status));
+    },
+    getStatus(): GameStatus {
+      return state.status;
     },
   };
 }

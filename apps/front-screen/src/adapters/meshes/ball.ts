@@ -5,6 +5,7 @@ import type { BallPosition } from '../../domain/game-state';
 export interface Ball {
   mesh: THREE.Mesh;
   setPosition: (position: BallPosition) => void;
+  setVisible: (visible: boolean) => void;
 }
 
 export function createBall(scene: THREE.Scene): Ball {
@@ -16,6 +17,7 @@ export function createBall(scene: THREE.Scene): Ball {
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(TABLE.ball.spawn.x, TABLE.ball.spawn.y, TABLE.ball.spawn.z);
+  mesh.visible = false;
 
   const light = new THREE.PointLight(0x06b6d4, 2, 6);
   mesh.add(light);
@@ -25,6 +27,9 @@ export function createBall(scene: THREE.Scene): Ball {
     mesh,
     setPosition(position: BallPosition): void {
       mesh.position.set(position.x, TABLE.ball.spawn.y, position.z);
+    },
+    setVisible(visible: boolean): void {
+      mesh.visible = visible;
     },
   };
 }
