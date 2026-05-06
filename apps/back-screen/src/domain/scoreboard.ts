@@ -1,18 +1,24 @@
+export type GameStatus = 'idle' | 'running' | 'over';
+
 export interface Scoreboard {
+  readonly status: GameStatus;
   readonly score: number;
   readonly ballsLeft: number;
   readonly multiplier: number;
-  readonly gameOver: boolean;
   readonly finalScore: number | null;
 }
 
 export const INITIAL_SCOREBOARD: Scoreboard = {
+  status: 'idle',
   score: 0,
   ballsLeft: 3,
   multiplier: 1,
-  gameOver: false,
   finalScore: null,
 };
+
+export function withStatus(state: Scoreboard, status: GameStatus): Scoreboard {
+  return { ...state, status };
+}
 
 export function withScore(
   state: Scoreboard,
@@ -20,7 +26,14 @@ export function withScore(
   ballsLeft: number,
   multiplier: number = state.multiplier,
 ): Scoreboard {
-  return { ...state, score, ballsLeft, multiplier };
+  return {
+    ...state,
+    status: 'running',
+    score,
+    ballsLeft,
+    multiplier,
+    finalScore: null,
+  };
 }
 
 export function withBallDrained(state: Scoreboard, ballsLeft: number): Scoreboard {
@@ -28,5 +41,5 @@ export function withBallDrained(state: Scoreboard, ballsLeft: number): Scoreboar
 }
 
 export function withGameOver(state: Scoreboard, finalScore: number): Scoreboard {
-  return { ...state, gameOver: true, finalScore };
+  return { ...state, status: 'over', finalScore };
 }
