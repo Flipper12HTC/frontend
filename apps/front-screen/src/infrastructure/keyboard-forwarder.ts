@@ -39,6 +39,12 @@ export function attachKeyboardForwarder(options: KeyboardForwarderOptions): () =
     void fetch(`${backendUrl}/game/restart`, { method: 'POST' }).catch(() => undefined);
   }
 
+  function postPlunger(action: 'press' | 'release'): void {
+    void fetch(`${backendUrl}/game/plunger/${action}`, { method: 'POST' }).catch(() => undefined);
+  }
+
+  let plungerDown = false;
+
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.code === 'Space') {
       if (e.repeat) return;
@@ -52,6 +58,13 @@ export function attachKeyboardForwarder(options: KeyboardForwarderOptions): () =
       postRestart();
       return;
     }
+    if (e.code === 'ArrowDown') {
+      e.preventDefault();
+      if (e.repeat || plungerDown) return;
+      plungerDown = true;
+      postPlunger('press');
+      return;
+    }
     const side = matchSide(e.code);
     if (side === null) return;
     if (down[side]) return;
@@ -60,6 +73,12 @@ export function attachKeyboardForwarder(options: KeyboardForwarderOptions): () =
   };
 
   const onKeyUp = (e: KeyboardEvent): void => {
+    if (e.code === 'ArrowDown') {
+      if (!plungerDown) return;
+      plungerDown = false;
+      postPlunger('release');
+      return;
+    }
     const side = matchSide(e.code);
     if (side === null) return;
     if (!down[side]) return;

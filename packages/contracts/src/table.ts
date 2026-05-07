@@ -8,6 +8,14 @@ export const TABLE = {
     thickness: 0.3,
   },
 
+  cornerRadius: 2,
+
+  launchLane: {
+    separatorX: 3.7,
+    zMin: -2,
+    zMax: 8,
+  },
+
   flippers: {
     left: { x: -3.5, y: 0.4, z: 5.5 },
     right: { x: 3.5, y: 0.4, z: 5.5 },
@@ -18,6 +26,6 @@ export const TABLE = {
 
   ball: {
     radius: 0.2,
-    spawn: { x: 0, y: 0.4, z: 0 },
+    spawn: { x: 4.1, y: 0.2, z: 7.65 },
   },
 } as const;
