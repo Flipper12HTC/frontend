@@ -10,6 +10,36 @@ export interface SceneContext {
   resize: () => void;
 }
 
+function addRoundedCorner(
+  scene: THREE.Scene,
+  material: THREE.Material,
+  cx: number,
+  cz: number,
+  radius: number,
+  height: number,
+  thickness: number,
+  corner: 'topLeft' | 'topRight',
+): void {
+  const segments = 3;
+  const chord = 2 * radius * Math.sin(Math.PI / (4 * segments));
+  const xSign = corner === 'topRight' ? 1 : -1;
+
+  for (let i = 0; i < segments; i++) {
+    const angle = -((i + 0.5) * Math.PI) / (2 * segments);
+    const x = cx + xSign * radius * Math.cos(angle);
+    const z = cz + radius * Math.sin(angle);
+    const yaw = corner === 'topRight' ? -Math.PI / 2 - angle : Math.PI / 2 + angle;
+
+    const seg = new THREE.Mesh(
+      new THREE.BoxGeometry(chord, height, thickness),
+      material,
+    );
+    seg.position.set(x, height / 2, z);
+    seg.rotation.y = yaw;
+    scene.add(seg);
+  }
+}
+
 export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0a0f);
@@ -44,37 +74,57 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const cuirTexture = textureLoader.load('/cuir.jpg');
   const wallMaterial = new THREE.MeshStandardMaterial({ map: cuirTexture });
   const { height: wallHeight, thickness: wallThickness } = TABLE.wall;
-  const wallLongSize = TABLE.width + wallThickness;
   const halfW = TABLE.width / 2;
   const halfD = TABLE.depth / 2;
+  const r = TABLE.cornerRadius;
+
+  // Side walls: shortened at the top to leave room for the rounded corners
+  const sideLength = TABLE.depth - r;
+  const sideCenterZ = r / 2;
 
   const wallLeft = new THREE.Mesh(
-    new THREE.BoxGeometry(wallThickness, wallHeight, TABLE.depth),
+    new THREE.BoxGeometry(wallThickness, wallHeight, sideLength),
     wallMaterial,
   );
-  wallLeft.position.set(-halfW, wallHeight / 2, 0);
+  wallLeft.position.set(-halfW, wallHeight / 2, sideCenterZ);
   scene.add(wallLeft);
 
   const wallRight = new THREE.Mesh(
-    new THREE.BoxGeometry(wallThickness, wallHeight, TABLE.depth),
+    new THREE.BoxGeometry(wallThickness, wallHeight, sideLength),
     wallMaterial,
   );
-  wallRight.position.set(halfW, wallHeight / 2, 0);
+  wallRight.position.set(halfW, wallHeight / 2, sideCenterZ);
   scene.add(wallRight);
 
+  // Top wall: shortened on both ends to leave room for the rounded corners
+  const topLength = TABLE.width - 2 * r;
   const wallTop = new THREE.Mesh(
-    new THREE.BoxGeometry(wallLongSize, wallHeight, wallThickness),
+    new THREE.BoxGeometry(topLength, wallHeight, wallThickness),
     wallMaterial,
   );
   wallTop.position.set(0, wallHeight / 2, -halfD);
   scene.add(wallTop);
 
   const wallBottom = new THREE.Mesh(
-    new THREE.BoxGeometry(wallLongSize, wallHeight, wallThickness),
+    new THREE.BoxGeometry(TABLE.width, wallHeight, wallThickness),
     wallMaterial,
   );
   wallBottom.position.set(0, wallHeight / 2, halfD);
   scene.add(wallBottom);
+
+  addRoundedCorner(scene, wallMaterial, halfW - r, -halfD + r, r, wallHeight, wallThickness, 'topRight');
+  addRoundedCorner(scene, wallMaterial, -halfW + r, -halfD + r, r, wallHeight, wallThickness, 'topLeft');
+
+  // Launch lane separator (right side)
+  const lane = TABLE.launchLane;
+  const sepLength = lane.zMax - lane.zMin;
+  const sepCenterZ2 = (lane.zMax + lane.zMin) / 2;
+  const wallSeparator = new THREE.Mesh(
+    new THREE.BoxGeometry(wallThickness, wallHeight, sepLength),
+    wallMaterial,
+  );
+  wallSeparator.position.set(lane.separatorX, wallHeight / 2, sepCenterZ2);
+  scene.add(wallSeparator);
 
   const gridHelper = new THREE.GridHelper(40, 40);
   scene.add(gridHelper);
