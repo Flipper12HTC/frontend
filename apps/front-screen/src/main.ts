@@ -5,6 +5,7 @@ import { attachKeyboardForwarder } from './infrastructure/keyboard-forwarder';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
+import { createStartOverlay } from './adapters/hud/start-overlay';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
 
 const WS_URL = 'ws://localhost:8080/ws';
@@ -26,6 +27,7 @@ const { scene, render, resize } = createScene(canvas);
 const ball = createBall(scene);
 const flipperLeft = createFlipper(scene, { side: 'left' });
 const flipperRight = createFlipper(scene, { side: 'right' });
+const startOverlay = createStartOverlay();
 
 const source = pickSource();
 
@@ -38,10 +40,29 @@ const orchestrator = createRendererOrchestrator(source, {
     flipperLeft.setState(state);
     flipperRight.setState(state);
   },
+  onScoreChanged() {
+    startOverlay.hide();
+  },
   onGameOver() {
     ball.setVisible(false);
+    startOverlay.show();
   },
 });
+
+async function syncInitialState(): Promise<void> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/game/state`);
+    if (!res.ok) return;
+    const data = (await res.json()) as { running?: boolean; status?: string };
+    const running = data.running === true || data.status === 'running';
+    if (running) startOverlay.hide();
+    else startOverlay.show();
+  } catch {
+    // backend unreachable — leave overlay visible (safe default)
+  }
+}
+
+void syncInitialState();
 
 attachKeyboardForwarder({ backendUrl: BACKEND_URL });
 
