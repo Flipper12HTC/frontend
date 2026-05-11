@@ -4,6 +4,7 @@ import type { BallPosition, FlipperState } from '../domain/game-state';
 export interface RendererCallbacks {
   onBallMoved: (position: BallPosition) => void;
   onFlipperChanged: (state: FlipperState) => void;
+  onBumperHit?: (x: number, z: number) => void;
   onScoreChanged?: (score: number, ballsLeft: number) => void;
   onGameOver?: (finalScore: number) => void;
 }
@@ -28,6 +29,15 @@ export function createRendererOrchestrator(
         callbacks.onFlipperChanged(event.payload);
       }),
     );
+
+    const bumperCb = callbacks.onBumperHit;
+    if (bumperCb) {
+      unsubs.push(
+        source.on('bumper_hit', (event) => {
+          bumperCb(event.payload.x, event.payload.z);
+        }),
+      );
+    }
 
     const scoreCb = callbacks.onScoreChanged;
     if (scoreCb) {

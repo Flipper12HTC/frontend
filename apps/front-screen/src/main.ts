@@ -22,9 +22,9 @@ function pickSource(): GameSource {
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 
-const { scene, render, resize } = createScene(canvas);
+const { scene, render, resize, flashBumper } = createScene(canvas);
 const ball = createBall(scene);
-const flipperLeft = createFlipper(scene, { side: 'left' });
+const flipperLeft  = createFlipper(scene, { side: 'left' });
 const flipperRight = createFlipper(scene, { side: 'right' });
 
 const source = pickSource();
@@ -38,6 +38,9 @@ const orchestrator = createRendererOrchestrator(source, {
     flipperLeft.setState(state);
     flipperRight.setState(state);
   },
+  onBumperHit(x, z) {
+    flashBumper(x, z);
+  },
   onGameOver() {
     ball.setVisible(false);
   },
@@ -46,7 +49,6 @@ const orchestrator = createRendererOrchestrator(source, {
 attachKeyboardForwarder({ backendUrl: BACKEND_URL });
 
 window.addEventListener('resize', resize);
-
 
 function loop(): void {
   requestAnimationFrame(loop);

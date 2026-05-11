@@ -9,9 +9,46 @@
 
 body {
   overflow: hidden;
-  background: var(--color-arcade-black);
+  background: linear-gradient(180deg, #060d17 0%, #0a1a2e 50%, #061408 100%);
+}
+
+/* Aurores boréales en arrière-plan */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 25% 35%, rgba(16, 185, 129, 0.28) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 20%, rgba(139, 92, 246, 0.22) 0%, transparent 50%);
+  animation: aurora-a 9s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 60% 65%, rgba(59, 130, 246, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 15% 55%, rgba(16, 185, 129, 0.15) 0%, transparent 45%);
+  animation: aurora-b 13s ease-in-out infinite reverse;
+  pointer-events: none;
+  z-index: 0;
 }
 
 canvas {
   display: block;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes aurora-a {
+  0%,100% { opacity: 0.5; transform: translateX(-12%) scaleY(1.0); }
+  50%     { opacity: 1.0; transform: translateX(12%)  scaleY(1.35); }
+}
+
+@keyframes aurora-b {
+  0%,100% { opacity: 0.4; transform: translateX(10%)  scaleY(0.9); }
+  50%     { opacity: 0.9; transform: translateX(-10%) scaleY(1.25); }
 }

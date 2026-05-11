@@ -9,9 +9,9 @@
 
 body {
   overflow: hidden;
-  background: var(--color-arcade-black);
-  color: var(--color-score-primary);
-  font-family: var(--font-body);
+  background: var(--color-forest-night);
+  color: var(--color-snow);
+  font-family: var(--font-hud);
 }
 
 canvas {

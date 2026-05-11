@@ -8,11 +8,26 @@
 }
 
 body {
-  background: var(--color-arcade-black);
-  color: var(--color-score-primary);
-  font-family: var(--font-hud);
+  overflow: hidden;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: linear-gradient(
+    180deg,
+    #060d17 0%,
+    #0a1a2e 45%,
+    #061408 100%
+  );
+  color: var(--color-snow);
+  font-family: var(--font-hud);
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+@keyframes snow-fall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }

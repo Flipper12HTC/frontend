@@ -1,4 +1,5 @@
 @theme {
+  /* Palette arcade */
   --color-arcade-black: #0a0a0f;
   --color-arcade-dark: #12121a;
   --color-arcade-panel: #1a1a2e;
@@ -10,13 +11,28 @@
   --color-neon-pink: #ec4899;
   --color-neon-yellow: #eab308;
 
+  /* Palette hiver / nature */
+  --color-snow: #e8f4fd;
+  --color-ice: #7dd3fc;
+  --color-frost: #bae6fd;
+  --color-ice-glow: #38bdf8;
+  --color-forest-night: #060d17;
+  --color-forest-deep: #0a1a2e;
+  --color-pine-dark: #07160a;
+  --color-pine: #0d2a14;
+  --color-ember: #f97316;
+
+  /* Score */
   --color-score-primary: #ffffff;
   --color-score-muted: #94a3b8;
 
+  /* Polices */
   --font-display: 'DotGothic16', 'Press Start 2P', monospace;
+  --font-score: 'Orbitron', monospace;
   --font-hud: 'Share Tech Mono', monospace;
   --font-body: system-ui, sans-serif;
 
+  /* Tailles score */
   --text-score-xl: clamp(4rem, 10vw, 8rem);
   --text-score-lg: clamp(2rem, 5vw, 4rem);
   --text-score-md: clamp(1rem, 2.5vw, 1.5rem);
