@@ -11,9 +11,9 @@ export interface FlipperOptions {
   side: 'left' | 'right';
 }
 
-const THICKNESS = 0.4;
-const BASE_HALF_HEIGHT = 0.35;
-const TIP_HALF_HEIGHT = 0.18;
+const THICKNESS = 0.22;
+const BASE_HALF_HEIGHT = 0.22;
+const TIP_HALF_HEIGHT = 0.09;
 const ROTATION_SPEED = 18;
 
 export function createFlipper(scene: THREE.Scene, options: FlipperOptions): Flipper {
@@ -39,9 +39,9 @@ export function createFlipper(scene: THREE.Scene, options: FlipperOptions): Flip
   geo.rotateX(-Math.PI / 2);
 
   const mat = new THREE.MeshStandardMaterial({
-    color: side === 'left' ? 0xef4444 : 0x3b82f6,
-    roughness: 0.4,
-    metalness: 0.6,
+    color: side === 'left' ? 0xbae6fd : 0x7dd3fc,
+    roughness: 0.15,
+    metalness: 0.85,
   });
 
   const mesh = new THREE.Mesh(geo, mat);

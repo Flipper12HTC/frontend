@@ -28,9 +28,9 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   scene.background = new THREE.Color(0x0d1a2e);
   scene.fog = new THREE.FogExp2(0x0d1a2e, 0.018);
 
-  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 18, 12);
-  camera.lookAt(0, 0, 0);
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 19, 11);
+  camera.lookAt(0, 0, 1);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -145,17 +145,15 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   wallBottom.position.set(0, wallHeight / 2, halfD);
   scene.add(wallBottom);
 
-  // --- Apron (forme V style vrai flipper) ---
-  const apronZTop  = TABLE.flippers.left.z - 0.6;  // bord intérieur (côté flippers)
-  const apronZBot  = halfD - wallThickness;          // bord extérieur (côté mur bas)
-  const apronXMax  = halfW - wallThickness;          // 4.2
-  const drainHalfW = 0.55;                           // demi-largeur du trou de drain
-  const drainDepth = 0.9;                            // profondeur du V
+  // --- Apron (forme V style vrai flipper, pleine hauteur) ---
+  const apronZTop  = TABLE.flippers.left.z;    // bord intérieur = niveau exact des flippers
+  const apronZBot  = halfD - wallThickness;     // bord extérieur (côté mur bas)
+  const apronXMax  = halfW - wallThickness;     // 4.2
+  const drainHalfW = 0.9;                       // fente large pour la balle
+  const drainDepth = 1.2;                       // profondeur du V
+  const apronH     = TABLE.flippers.left.y - TABLE.floorThickness / 2 - 0.05; // juste sous les flippers
+  const apronBase  = TABLE.floorThickness / 2;
 
-  // Forme 2D dans le plan XY local ; après rotation.x = -π/2 :
-  // local.x  → world.x  (gauche/droite)
-  // local.y  → world.-z → on utilise -z comme coordonnée y
-  // extrusion (local.z) → world.y (hauteur)
   const apronShape = new THREE.Shape();
   apronShape.moveTo(-apronXMax, -apronZBot);
   apronShape.lineTo( apronXMax, -apronZBot);
@@ -167,37 +165,106 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   apronShape.lineTo(-apronXMax, -apronZTop);
   apronShape.closePath();
 
-  const apronGeo = new THREE.ExtrudeGeometry(apronShape, { depth: 0.18, bevelEnabled: false });
-
+  const apronGeo = new THREE.ExtrudeGeometry(apronShape, { depth: apronH, bevelEnabled: false });
   const apronBodyMat = new THREE.MeshStandardMaterial({
-    color: 0x0b1220,
-    metalness: 0.75,
-    roughness: 0.22,
+    color: 0x080e1a,
+    metalness: 0.8,
+    roughness: 0.18,
   });
-
   const apronMesh = new THREE.Mesh(apronGeo, apronBodyMat);
   apronMesh.rotation.x = -Math.PI / 2;
-  apronMesh.position.set(0, TABLE.floorThickness / 2, 0);
+  apronMesh.position.set(0, apronBase, 0);
   scene.add(apronMesh);
 
-  // Liseré ice-blue sur le bord intérieur (inner top edge)
-  const apronTrimMat = new THREE.LineBasicMaterial({ color: 0x7dd3fc, linewidth: 2 });
-  const apronTrimY   = TABLE.floorThickness / 2 + 0.19;
-  const apronTrimPts = [
-    new THREE.Vector3(-apronXMax,   apronTrimY, apronZTop),
-    new THREE.Vector3(-1.5,         apronTrimY, apronZTop),
-    new THREE.Vector3(-drainHalfW,  apronTrimY, apronZTop + drainDepth),
-    new THREE.Vector3( drainHalfW,  apronTrimY, apronZTop + drainDepth),
-    new THREE.Vector3( 1.5,         apronTrimY, apronZTop),
-    new THREE.Vector3( apronXMax,   apronTrimY, apronZTop),
-  ];
-  const apronTrimGeo = new THREE.BufferGeometry().setFromPoints(apronTrimPts);
-  scene.add(new THREE.Line(apronTrimGeo, apronTrimMat));
+  const apronTopY = apronBase + apronH + 0.01;
 
-  // Lueur froide sur le drain
-  const apronLight = new THREE.PointLight(0x7dd3fc, 10, 3.5);
-  apronLight.position.set(0, TABLE.floorThickness / 2 + 0.5, apronZTop + drainDepth * 0.6);
-  scene.add(apronLight);
+  // Liseré ice-blue sur le bord intérieur (V du drain)
+  const apronTrimMat = new THREE.LineBasicMaterial({ color: 0x7dd3fc, linewidth: 2 });
+  const apronTrimPts = [
+    new THREE.Vector3(-apronXMax,              apronTopY, apronZTop),
+    new THREE.Vector3(-1.5,                    apronTopY, apronZTop),
+    new THREE.Vector3(-drainHalfW,             apronTopY, apronZTop + drainDepth),
+    new THREE.Vector3( drainHalfW,             apronTopY, apronZTop + drainDepth),
+    new THREE.Vector3( 1.5,                    apronTopY, apronZTop),
+    new THREE.Vector3( apronXMax,              apronTopY, apronZTop),
+  ];
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(apronTrimPts), apronTrimMat));
+
+  // Liseré amber sur le bord extérieur (bottom, côté mur)
+  const apronOuterMat = new THREE.LineBasicMaterial({ color: 0xf97316, linewidth: 2 });
+  const apronOuterPts = [
+    new THREE.Vector3(-apronXMax, apronTopY, apronZBot),
+    new THREE.Vector3( apronXMax, apronTopY, apronZBot),
+  ];
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(apronOuterPts), apronOuterMat));
+
+  // Lueur ice-blue sur le drain
+  const apronDrainLight = new THREE.PointLight(0x7dd3fc, 18, 4.5);
+  apronDrainLight.position.set(0, apronBase + apronH * 0.6, apronZTop + drainDepth * 0.7);
+  scene.add(apronDrainLight);
+
+  // Lueurs ambrées sur les ailes gauche et droite
+  const apronWingLightL = new THREE.PointLight(0xf97316, 6, 3.5);
+  apronWingLightL.position.set(-apronXMax * 0.6, apronBase + apronH * 0.5, (apronZTop + apronZBot) / 2);
+  scene.add(apronWingLightL);
+
+  const apronWingLightR = new THREE.PointLight(0xf97316, 6, 3.5);
+  apronWingLightR.position.set( apronXMax * 0.6, apronBase + apronH * 0.5, (apronZTop + apronZBot) / 2);
+  scene.add(apronWingLightR);
+
+  // Texture canvas "FLIPPER 12" sur la face supérieure
+  const apronCanvas = document.createElement('canvas');
+  apronCanvas.width  = 1024;
+  apronCanvas.height = 341;
+  const actx = apronCanvas.getContext('2d')!;
+
+  function drawApronCanvas(): void {
+    actx.clearRect(0, 0, 1024, 341);
+    const apronGrad = actx.createLinearGradient(0, 0, 0, 341);
+    apronGrad.addColorStop(0, '#0d1a2e');
+    apronGrad.addColorStop(1, '#080e1a');
+    actx.fillStyle = apronGrad;
+    actx.fillRect(0, 0, 1024, 341);
+
+    // Ligne déco amber en bas du canvas (bord extérieur)
+    const amber = actx.createLinearGradient(0, 0, 1024, 0);
+    amber.addColorStop(0,   'transparent');
+    amber.addColorStop(0.2, '#f97316');
+    amber.addColorStop(0.8, '#f97316');
+    amber.addColorStop(1,   'transparent');
+    actx.fillStyle = amber;
+    actx.fillRect(0, 316, 1024, 6);
+
+    actx.textAlign = 'center';
+    actx.textBaseline = 'middle';
+    actx.shadowColor = '#38bdf8';
+    actx.shadowBlur = 32;
+    actx.fillStyle = '#7dd3fc';
+    actx.font = 'bold 112px Orbitron, monospace';
+    actx.fillText('FLIPPER 12', 512, 148);
+
+    actx.shadowBlur = 12;
+    actx.fillStyle = '#bae6fd';
+    actx.font = '500 34px "Share Tech Mono", monospace';
+    actx.fillText('— WINTER EDITION —', 512, 270);
+  }
+
+  drawApronCanvas();
+  const apronTexture = new THREE.CanvasTexture(apronCanvas);
+  apronTexture.flipY = false;
+
+  void document.fonts.load('bold 112px Orbitron').then(() => {
+    drawApronCanvas();
+    apronTexture.needsUpdate = true;
+  });
+
+  const apronFace = new THREE.Mesh(
+    new THREE.ShapeGeometry(apronShape),
+    new THREE.MeshStandardMaterial({ map: apronTexture, metalness: 0.25, roughness: 0.45 }),
+  );
+  apronFace.rotation.x = -Math.PI / 2;
+  apronFace.position.set(0, apronTopY, 0);
+  scene.add(apronFace);
 
   // --- Zones de glace ---
   const iceMaterial = new THREE.MeshStandardMaterial({
