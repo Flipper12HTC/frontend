@@ -2,9 +2,13 @@ import type { GameEvent, GameEventType, GameSource, Unsubscribe } from '@flipper
 import { createWsClient, type WsClient } from '@flipper/ws-client';
 import { GameEventEmitter } from './event-emitter';
 
+export type ConnectionState = 'connecting' | 'open' | 'closed';
+
 export interface WsGameSourceOptions {
   url: string;
-  reconnectDelayMs?: number;
+  initialReconnectDelayMs?: number;
+  maxReconnectDelayMs?: number;
+  onConnectionChange?: (state: ConnectionState) => void;
 }
 
 const KNOWN_EVENT_TYPES: ReadonlySet<GameEventType> = new Set<GameEventType>([
@@ -33,9 +37,17 @@ export class WsGameSource implements GameSource {
 
   start(): void {
     if (this.client !== null) return;
+    this.options.onConnectionChange?.('connecting');
     this.client = createWsClient({
       url: this.options.url,
-      reconnectDelayMs: this.options.reconnectDelayMs,
+      initialReconnectDelayMs: this.options.initialReconnectDelayMs,
+      maxReconnectDelayMs: this.options.maxReconnectDelayMs,
+      onOpen: () => {
+        this.options.onConnectionChange?.('open');
+      },
+      onClose: () => {
+        this.options.onConnectionChange?.('closed');
+      },
       onMessage: (data: unknown) => {
         if (isGameEvent(data)) {
           this.emitter.emit(data);

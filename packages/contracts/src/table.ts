@@ -8,6 +8,11 @@ export const TABLE = {
     thickness: 0.3,
   },
 
+  drain: {
+    gap: 2.5,
+    yThreshold: -1,
+  },
+
   cornerRadius: 2,
 
   launchLane: {

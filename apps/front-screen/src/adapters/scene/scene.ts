@@ -105,12 +105,24 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   wallTop.position.set(0, wallHeight / 2, -halfD);
   scene.add(wallTop);
 
-  const wallBottom = new THREE.Mesh(
-    new THREE.BoxGeometry(TABLE.width, wallHeight, wallThickness),
+  // Bottom wall: split into two segments with a central drain gap
+  const drainGap = TABLE.drain.gap;
+  const bottomSideLength = (TABLE.width - drainGap) / 2;
+  const bottomSideX = (drainGap + bottomSideLength) / 2;
+
+  const wallBottomLeft = new THREE.Mesh(
+    new THREE.BoxGeometry(bottomSideLength, wallHeight, wallThickness),
     wallMaterial,
   );
-  wallBottom.position.set(0, wallHeight / 2, halfD);
-  scene.add(wallBottom);
+  wallBottomLeft.position.set(-bottomSideX, wallHeight / 2, halfD);
+  scene.add(wallBottomLeft);
+
+  const wallBottomRight = new THREE.Mesh(
+    new THREE.BoxGeometry(bottomSideLength, wallHeight, wallThickness),
+    wallMaterial,
+  );
+  wallBottomRight.position.set(bottomSideX, wallHeight / 2, halfD);
+  scene.add(wallBottomRight);
 
   addRoundedCorner(scene, wallMaterial, halfW - r, -halfD + r, r, wallHeight, wallThickness, 'topRight');
   addRoundedCorner(scene, wallMaterial, -halfW + r, -halfD + r, r, wallHeight, wallThickness, 'topLeft');

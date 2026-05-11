@@ -3,7 +3,8 @@ export interface WsClientOptions {
   onMessage: (data: unknown) => void;
   onOpen?: () => void;
   onClose?: () => void;
-  reconnectDelayMs?: number;
+  initialReconnectDelayMs?: number;
+  maxReconnectDelayMs?: number;
 }
 
 export interface WsClient {
@@ -11,16 +12,25 @@ export interface WsClient {
 }
 
 export function createWsClient(options: WsClientOptions): WsClient {
-  const { url, onMessage, onOpen, onClose, reconnectDelayMs = 2000 } = options;
+  const {
+    url,
+    onMessage,
+    onOpen,
+    onClose,
+    initialReconnectDelayMs = 1000,
+    maxReconnectDelayMs = 30000,
+  } = options;
 
   let socket: WebSocket | null = null;
   let shouldReconnect = true;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let attempt = 0;
 
   function connect(): void {
     socket = new WebSocket(url);
 
     socket.addEventListener('open', () => {
+      attempt = 0;
       onOpen?.();
     });
 
@@ -36,7 +46,9 @@ export function createWsClient(options: WsClientOptions): WsClient {
     socket.addEventListener('close', () => {
       onClose?.();
       if (shouldReconnect) {
-        reconnectTimer = setTimeout(connect, reconnectDelayMs);
+        const delay = Math.min(maxReconnectDelayMs, initialReconnectDelayMs * 2 ** attempt);
+        attempt++;
+        reconnectTimer = setTimeout(connect, delay);
       }
     });
 
