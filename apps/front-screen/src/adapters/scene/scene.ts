@@ -151,7 +151,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const apronXMax  = halfW - wallThickness;     // 4.2
   const drainHalfW = 0.9;                       // fente large pour la balle
   const drainDepth = 1.2;                       // profondeur du V
-  const apronH     = TABLE.flippers.left.y - TABLE.floorThickness / 2 - 0.05; // juste sous les flippers
+  const apronH     = wallHeight;                // même hauteur que les murs (1.0)
   const apronBase  = TABLE.floorThickness / 2;
 
   const apronShape = new THREE.Shape();
