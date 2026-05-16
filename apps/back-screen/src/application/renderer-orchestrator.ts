@@ -20,10 +20,7 @@ export interface Orchestrator {
   getStatus: () => GameStatus;
 }
 
-export function createRendererOrchestrator(
-  source: GameSource,
-  view: ScoreboardView,
-): Orchestrator {
+export function createRendererOrchestrator(source: GameSource, view: ScoreboardView): Orchestrator {
   let state: Scoreboard = INITIAL_SCOREBOARD;
   const unsubs: (() => void)[] = [];
 

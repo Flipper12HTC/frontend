@@ -30,10 +30,7 @@ function addRoundedCorner(
     const z = cz + radius * Math.sin(angle);
     const yaw = corner === 'topRight' ? -Math.PI / 2 - angle : Math.PI / 2 + angle;
 
-    const seg = new THREE.Mesh(
-      new THREE.BoxGeometry(chord, height, thickness),
-      material,
-    );
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(chord, height, thickness), material);
     seg.position.set(x, height / 2, z);
     seg.rotation.y = yaw;
     scene.add(seg);
@@ -44,12 +41,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0a0f);
 
-  const camera = new THREE.PerspectiveCamera(
-    50,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000,
-  );
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.set(0, 20, 20);
   camera.lookAt(0, 0, 0);
 
@@ -124,8 +116,26 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   wallBottomRight.position.set(bottomSideX, wallHeight / 2, halfD);
   scene.add(wallBottomRight);
 
-  addRoundedCorner(scene, wallMaterial, halfW - r, -halfD + r, r, wallHeight, wallThickness, 'topRight');
-  addRoundedCorner(scene, wallMaterial, -halfW + r, -halfD + r, r, wallHeight, wallThickness, 'topLeft');
+  addRoundedCorner(
+    scene,
+    wallMaterial,
+    halfW - r,
+    -halfD + r,
+    r,
+    wallHeight,
+    wallThickness,
+    'topRight',
+  );
+  addRoundedCorner(
+    scene,
+    wallMaterial,
+    -halfW + r,
+    -halfD + r,
+    r,
+    wallHeight,
+    wallThickness,
+    'topLeft',
+  );
 
   // Launch lane separator (right side)
   const lane = TABLE.launchLane;
