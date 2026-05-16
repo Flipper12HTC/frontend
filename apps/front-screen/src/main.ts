@@ -5,6 +5,7 @@ import { attachKeyboardForwarder } from './infrastructure/keyboard-forwarder';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
+import { createStartOverlay } from './adapters/hud/start-overlay';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
 
 const WS_URL = 'ws://localhost:8080/ws';
@@ -29,6 +30,18 @@ const flipperRight = createFlipper(scene, { side: 'right' });
 
 const source = pickSource();
 
+const startOverlay = createStartOverlay(() => {
+  void fetch(`${BACKEND_URL}/game/start`, { method: 'POST' })
+    .then((r) => {
+      if (r.ok) startOverlay.hide();
+    })
+    .catch(() => {
+      /* backend unreachable, keep overlay */
+    });
+});
+startOverlay.mount();
+startOverlay.show();
+
 const orchestrator = createRendererOrchestrator(source, {
   onBallMoved(position) {
     ball.setPosition(position);
@@ -38,14 +51,32 @@ const orchestrator = createRendererOrchestrator(source, {
     flipperLeft.setState(state);
     flipperRight.setState(state);
   },
+  onScoreChanged() {
+    startOverlay.hide();
+  },
   onGameOver() {
     ball.setVisible(false);
+    setTimeout(() => {
+      startOverlay.show();
+    }, 3000);
   },
 });
 
 attachKeyboardForwarder({ backendUrl: BACKEND_URL });
 
 window.addEventListener('resize', resize);
+
+void fetch(`${BACKEND_URL}/game/state`)
+  .then((r) => (r.ok ? r.json() : null))
+  .then((data: unknown) => {
+    if (data && typeof data === 'object' && 'status' in data) {
+      const status = (data as { status: unknown }).status;
+      if (status === 'running') startOverlay.hide();
+    }
+  })
+  .catch(() => {
+    /* backend unreachable, keep overlay */
+  });
 
 function loop(): void {
   requestAnimationFrame(loop);

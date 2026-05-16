@@ -36,8 +36,7 @@ export default tseslint.config(
         {
           patterns: LAYER_FORBIDDEN_PATTERNS.map((pattern) => ({
             group: [pattern],
-            message:
-              'domain/ and application/ must not depend on rendering or outer layers.',
+            message: 'domain/ and application/ must not depend on rendering or outer layers.',
           })),
         },
       ],
