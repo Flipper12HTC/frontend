@@ -38,13 +38,6 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   gltfLoader.load('/models/BaseFlipper.glb', (gltf) => {
     const base = gltf.scene;
 
-    // Drop leftover backup meshes from Blender (Cube.xxx_BAK, Playfield_Surface_BAK, etc.)
-    const toRemove: THREE.Object3D[] = [];
-    base.traverse((obj) => {
-      if (obj.name.endsWith('_BAK')) toRemove.push(obj);
-    });
-    for (const obj of toRemove) obj.parent?.remove(obj);
-
     const box = new THREE.Box3().setFromObject(base);
     const size = box.getSize(new THREE.Vector3());
     
@@ -67,7 +60,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   }
 
   function resize(): void {
-
+    // no-op: render resolution stays fixed, CSS handles screen-fit letterbox
   }
 
   return { scene, camera, renderer, render, resize };
