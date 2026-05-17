@@ -22,9 +22,9 @@ export const TABLE = {
   },
 
   flippers: {
-    left: { x: -3.5, y: 0.4, z: 5.5 },
-    right: { x: 3.5, y: 0.4, z: 5.5 },
-    length: 3,
+    left: { x: -2.5, y: 0.4, z: 5.5 },
+    right: { x: 2.3, y: 0.4, z: 5.5 },
+    length: 2.1,
     restAngle: 0.3,
     activeAngle: -0.5,
   },
