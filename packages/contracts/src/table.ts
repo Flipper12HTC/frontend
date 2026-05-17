@@ -33,4 +33,10 @@ export const TABLE = {
     radius: 0.2,
     spawn: { x: 4.1, y: 0.2, z: 7.65 },
   },
+
+  bumpers: [
+    { id: 'b1', x: -1.5, z: -3, radius: 0.5, scale: 1 },
+    { id: 'b2', x: 1.5, z: -3, radius: 0.5, scale: 1 },
+    { id: 'b3', x: 0, z: -5, radius: 0.5, scale: 1.2 },
+  ],
 } as const;

@@ -40,7 +40,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
 
     const box = new THREE.Box3().setFromObject(base);
     const size = box.getSize(new THREE.Vector3());
-    
+
     const sx = TABLE.width / size.x;
     const sz = TABLE.depth / size.z;
     const sy = (sx + sz) / 2;
@@ -53,6 +53,20 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     base.position.y -= box2.min.y;
 
     scene.add(base);
+  });
+
+  gltfLoader.load('/models/Bumper.glb', (gltf) => {
+    const template = gltf.scene;
+    const tplBox = new THREE.Box3().setFromObject(template);
+    const tplSize = tplBox.getSize(new THREE.Vector3());
+    const tplRadius = Math.max(tplSize.x, tplSize.z) / 2;
+    for (const b of TABLE.bumpers) {
+      const instance = template.clone(true);
+      const normalize = b.radius / tplRadius;
+      instance.scale.setScalar(normalize * b.scale);
+      instance.position.set(b.x, 0.4, b.z);
+      scene.add(instance);
+    }
   });
 
   function render(): void {
