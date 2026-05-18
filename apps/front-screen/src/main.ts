@@ -7,6 +7,8 @@ import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
 import { createStartOverlay } from './adapters/hud/start-overlay';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
+import { createWallBumper, type WallBumper } from './adapters/meshes/wall-bumper';
+import { TABLE } from '@flipper/contracts';
 
 const WS_URL = 'ws://localhost:8080/ws';
 const BACKEND_URL =
@@ -27,6 +29,10 @@ const { scene, render, resize } = createScene(canvas);
 const ball = createBall(scene);
 const flipperLeft = createFlipper(scene, { side: 'left' });
 const flipperRight = createFlipper(scene, { side: 'right' });
+
+const wallBumperMap = new Map<string, WallBumper>(
+  TABLE.wallBumpers.map((cfg) => [cfg.id, createWallBumper(scene, cfg)]),
+);
 
 const source = pickSource();
 
@@ -59,6 +65,9 @@ const orchestrator = createRendererOrchestrator(source, {
     setTimeout(() => {
       startOverlay.show();
     }, 3000);
+  },
+  onBumperHit(id) {
+    wallBumperMap.get(id)?.flash();
   },
 });
 

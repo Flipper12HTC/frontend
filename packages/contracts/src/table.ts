@@ -39,4 +39,11 @@ export const TABLE = {
     { id: 'b2', x: 1.5, z: -3, radius: 0.5, scale: 1 },
     { id: 'b3', x: 0, z: -5, radius: 0.5, scale: 1.2 },
   ],
+
+  wallBumpers: [
+    { id: 'wl1', x: -4.2, z:  1.5, length: 2.0, color: 0xff6600 },
+    { id: 'wl2', x: -4.2, z: -2.5, length: 2.0, color: 0xff6600 },
+    { id: 'wr1', x:  4.2, z:  1.5, length: 2.0, color: 0xff6600 },
+    { id: 'wr2', x:  4.2, z: -2.5, length: 2.0, color: 0xff6600 },
+  ],
 } as const;
