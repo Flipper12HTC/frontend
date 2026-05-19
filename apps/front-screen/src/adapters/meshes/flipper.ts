@@ -1,9 +1,10 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 import { TABLE } from '@flipper/contracts';
 import type { FlipperState } from '../../domain/game-state';
 
 export interface Flipper {
-  mesh: THREE.Mesh;
+  mesh: THREE.Object3D;
   setState: (state: FlipperState) => void;
 }
 
@@ -11,52 +12,31 @@ export interface FlipperOptions {
   side: 'left' | 'right';
 }
 
-const THICKNESS = 0.4;
-const BASE_HALF_HEIGHT = 0.35;
-const TIP_HALF_HEIGHT = 0.18;
 const ROTATION_SPEED = 18;
+const VISUAL_SCALE = 1.4;
+const X_OFFSET = 0.4;
+const loader = new GLTFLoader();
 
 export function createFlipper(scene: THREE.Scene, options: FlipperOptions): Flipper {
   const { side } = options;
-  const length = TABLE.flippers.length;
   const pivot = side === 'left' ? TABLE.flippers.left : TABLE.flippers.right;
-
-  const shape = new THREE.Shape();
-  shape.moveTo(0, -BASE_HALF_HEIGHT);
-  shape.lineTo(length, -TIP_HALF_HEIGHT);
-  shape.lineTo(length, TIP_HALF_HEIGHT);
-  shape.lineTo(0, BASE_HALF_HEIGHT);
-  shape.closePath();
-
-  const geo = new THREE.ExtrudeGeometry(shape, {
-    depth: THICKNESS,
-    bevelEnabled: true,
-    bevelThickness: 0.04,
-    bevelSize: 0.04,
-    bevelSegments: 2,
-  });
-  geo.translate(0, 0, -THICKNESS / 2);
-  geo.rotateX(-Math.PI / 2);
-
-  const mat = new THREE.MeshStandardMaterial({
-    color: side === 'left' ? 0xef4444 : 0x3b82f6,
-    roughness: 0.4,
-    metalness: 0.6,
-  });
-
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(pivot.x, pivot.y, pivot.z);
 
   const sign = side === 'left' ? -1 : 1;
   const restAngle = sign * TABLE.flippers.restAngle;
   const activeAngle = sign * TABLE.flippers.activeAngle;
 
-  if (side === 'right') {
-    mesh.scale.x = -1;
-  }
-  mesh.rotation.y = restAngle;
+  const group = new THREE.Group();
+  const xPos = pivot.x + (side === 'left' ? X_OFFSET : -X_OFFSET);
+  group.position.set(xPos, pivot.y, pivot.z);
+  group.scale.setScalar(VISUAL_SCALE);
+  group.rotation.y = restAngle;
+  scene.add(group);
 
-  scene.add(mesh);
+  loader.load('/models/PaletteFlipper.glb', (gltf) => {
+    const model = gltf.scene;
+    if (side === 'right') model.rotation.y = Math.PI;
+    group.add(model);
+  });
 
   let targetAngle = restAngle;
   let currentAngle = restAngle;
@@ -69,13 +49,13 @@ export function createFlipper(scene: THREE.Scene, options: FlipperOptions): Flip
     const delta = targetAngle - currentAngle;
     const step = Math.sign(delta) * Math.min(Math.abs(delta), ROTATION_SPEED * dt);
     currentAngle += step;
-    mesh.rotation.y = currentAngle;
+    group.rotation.y = currentAngle;
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 
   return {
-    mesh,
+    mesh: group,
     setState(state: FlipperState): void {
       if (state.side !== side) return;
       targetAngle = state.active ? activeAngle : restAngle;
