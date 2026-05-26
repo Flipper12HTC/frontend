@@ -5,39 +5,34 @@ import { attachKeyboardForwarder } from './infrastructure/keyboard-forwarder';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
+import type { Flipper } from './adapters/meshes/flipper';
 import { createStartOverlay } from './adapters/hud/start-overlay';
-import { MockGameSource, WsGameSource } from '@flipper/game-sources';
+import { WsGameSource } from '@flipper/game-sources';
 
 const WS_URL = 'ws://localhost:8080/ws';
 const BACKEND_URL =
   (import.meta.env.VITE_BACKEND_URL as string | undefined) ?? 'http://localhost:8080';
 
-function pickSource(): GameSource {
-  const kind = import.meta.env.VITE_GAME_SOURCE ?? (import.meta.env.DEV ? 'mock' : 'ws');
-  if (kind === 'ws') {
-    return new WsGameSource({ url: WS_URL });
-  }
-  return new MockGameSource();
-}
-
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 
-const { scene, render, resize } = createScene(canvas);
+const { scene, render, resize, onMeshesReady } = createScene(canvas);
 const ball = createBall(scene);
-const flipperLeft = createFlipper(scene, { side: 'left' });
-const flipperRight = createFlipper(scene, { side: 'right' });
+const source: GameSource = new WsGameSource({ url: WS_URL });
 
-const source = pickSource();
+let flipperLeft: Flipper | null = null;
+let flipperRight: Flipper | null = null;
+
+onMeshesReady(({ flipperLeft: leftMesh, flipperRight: rightMesh }) => {
+  flipperLeft = createFlipper(scene, leftMesh, { side: 'left' });
+  flipperRight = createFlipper(scene, rightMesh, { side: 'right' });
+});
 
 const startOverlay = createStartOverlay(() => {
-  void fetch(`${BACKEND_URL}/game/start`, { method: 'POST' })
-    .then((r) => {
-      if (r.ok) startOverlay.hide();
-    })
-    .catch(() => {
-      /* backend unreachable, keep overlay */
-    });
+  startOverlay.hide();
+  void fetch(`${BACKEND_URL}/game/start`, { method: 'POST' }).catch(() => {
+    /* backend unreachable — overlay already hidden, map stays visible */
+  });
 });
 startOverlay.mount();
 startOverlay.show();
@@ -48,8 +43,8 @@ const orchestrator = createRendererOrchestrator(source, {
     ball.setVisible(true);
   },
   onFlipperChanged(state) {
-    flipperLeft.setState(state);
-    flipperRight.setState(state);
+    flipperLeft?.setState(state);
+    flipperRight?.setState(state);
   },
   onScoreChanged() {
     startOverlay.hide();

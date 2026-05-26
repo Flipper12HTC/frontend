@@ -3,7 +3,7 @@ import { TABLE } from '@flipper/contracts';
 import type { FlipperState } from '../../domain/game-state';
 
 export interface Flipper {
-  mesh: THREE.Mesh;
+  object: THREE.Object3D;
   setState: (state: FlipperState) => void;
 }
 
@@ -11,52 +11,32 @@ export interface FlipperOptions {
   side: 'left' | 'right';
 }
 
-const THICKNESS = 0.4;
-const BASE_HALF_HEIGHT = 0.35;
-const TIP_HALF_HEIGHT = 0.18;
 const ROTATION_SPEED = 18;
 
-export function createFlipper(scene: THREE.Scene, options: FlipperOptions): Flipper {
+export function createFlipper(
+  scene: THREE.Scene,
+  mesh: THREE.Object3D,
+  options: FlipperOptions,
+): Flipper {
   const { side } = options;
-  const length = TABLE.flippers.length;
-  const pivot = side === 'left' ? TABLE.flippers.left : TABLE.flippers.right;
-
-  const shape = new THREE.Shape();
-  shape.moveTo(0, -BASE_HALF_HEIGHT);
-  shape.lineTo(length, -TIP_HALF_HEIGHT);
-  shape.lineTo(length, TIP_HALF_HEIGHT);
-  shape.lineTo(0, BASE_HALF_HEIGHT);
-  shape.closePath();
-
-  const geo = new THREE.ExtrudeGeometry(shape, {
-    depth: THICKNESS,
-    bevelEnabled: true,
-    bevelThickness: 0.04,
-    bevelSize: 0.04,
-    bevelSegments: 2,
-  });
-  geo.translate(0, 0, -THICKNESS / 2);
-  geo.rotateX(-Math.PI / 2);
-
-  const mat = new THREE.MeshStandardMaterial({
-    color: side === 'left' ? 0xef4444 : 0x3b82f6,
-    roughness: 0.4,
-    metalness: 0.6,
-  });
-
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(pivot.x, pivot.y, pivot.z);
-
   const sign = side === 'left' ? -1 : 1;
   const restAngle = sign * TABLE.flippers.restAngle;
   const activeAngle = sign * TABLE.flippers.activeAngle;
 
-  if (side === 'right') {
-    mesh.scale.x = -1;
-  }
-  mesh.rotation.y = restAngle;
+  // Compute pivot from the mesh's actual world bounding box so it matches the
+  // GLB geometry exactly, regardless of scaling / centering applied to the root.
+  // Left flipper rotates around its left (min-X) edge; right around its right (max-X) edge.
+  const box = new THREE.Box3().setFromObject(mesh);
+  const center = box.getCenter(new THREE.Vector3());
+  const pivotX = side === 'left' ? box.min.x : box.max.x;
+  const pivotY = box.min.y;
+  const pivotZ = center.z;
 
-  scene.add(mesh);
+  const group = new THREE.Group();
+  group.position.set(pivotX, pivotY, pivotZ);
+  scene.add(group);
+  group.attach(mesh);
+  group.rotation.y = restAngle;
 
   let targetAngle = restAngle;
   let currentAngle = restAngle;
@@ -69,13 +49,13 @@ export function createFlipper(scene: THREE.Scene, options: FlipperOptions): Flip
     const delta = targetAngle - currentAngle;
     const step = Math.sign(delta) * Math.min(Math.abs(delta), ROTATION_SPEED * dt);
     currentAngle += step;
-    mesh.rotation.y = currentAngle;
+    group.rotation.y = currentAngle;
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 
   return {
-    mesh,
+    object: group,
     setState(state: FlipperState): void {
       if (state.side !== side) return;
       targetAngle = state.active ? activeAngle : restAngle;
