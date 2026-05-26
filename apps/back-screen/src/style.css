@@ -1,6 +1,25 @@
 @import 'tailwindcss';
 @import '@flipper/design-system/theme.css';
 
+/* ---- Thème Flipper 12 HeTiC ---- */
+@theme {
+  --color-arcade-black: #2ba8a4;
+  --color-arcade-dark: #1a7e7a;
+  --color-arcade-panel: #1b3b8a;
+
+  --color-neon-yellow: #e2d147;
+  --color-neon-pink: #e2d147;
+  --color-neon-cyan: #ffffff;
+  --color-neon-green: #e2d147;
+  --color-neon-blue: #1b3b8a;
+
+  --color-score-primary: #e2d147;
+  --color-score-muted: rgba(255, 255, 255, 0.85);
+
+  --font-display: 'Luckiest Guy', cursive;
+  --font-hud: 'Fredoka One', cursive;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -8,11 +27,54 @@
 }
 
 body {
-  background: var(--color-arcade-black);
+  background: #3ecfca;
   color: var(--color-score-primary);
   font-family: var(--font-hud);
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Texte jaune avec contour sombre — style logo */
+.outlined {
+  color: #e2d147;
+  -webkit-text-stroke: 5px #4a5200;
+  paint-order: stroke fill;
+  text-shadow: 3px 4px 0 #4a5200;
+}
+
+.outlined-sm {
+  color: #e2d147;
+  -webkit-text-stroke: 3px #4a5200;
+  paint-order: stroke fill;
+  text-shadow: 2px 3px 0 #4a5200;
+}
+
+/* Planche navy — style "HeTiC" du logo */
+.plank {
+  background: linear-gradient(180deg, #2249a8 0%, #162e70 50%, #1e3f96 100%);
+  border: 3px solid #0d2260;
+  border-radius: 10px;
+  box-shadow: 0 5px 0 #0d2260, 0 8px 16px rgba(0, 0, 0, 0.35);
+  padding: 6px 28px;
+  color: #ffffff;
+  font-family: 'Fredoka One', cursive;
+  letter-spacing: 0.05em;
+}
+
+/* Bulles de fond */
+.bubble {
+  position: fixed;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  animation: bubble-rise linear infinite;
+  pointer-events: none;
+}
+
+@keyframes bubble-rise {
+  0% { transform: translateY(0) translateX(0); opacity: 0.7; }
+  50% { transform: translateY(-50vh) translateX(12px); opacity: 0.45; }
+  100% { transform: translateY(-105vh) translateX(-8px); opacity: 0; }
 }
