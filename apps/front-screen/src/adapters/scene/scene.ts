@@ -55,19 +55,8 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     scene.add(base);
   });
 
-  gltfLoader.load('/models/Bumper.glb', (gltf) => {
-    const template = gltf.scene;
-    const tplBox = new THREE.Box3().setFromObject(template);
-    const tplSize = tplBox.getSize(new THREE.Vector3());
-    const tplRadius = Math.max(tplSize.x, tplSize.z) / 2;
-    for (const b of TABLE.bumpers) {
-      const instance = template.clone(true);
-      const normalize = b.radius / tplRadius;
-      instance.scale.setScalar(normalize * b.scale);
-      instance.position.set(b.x, 0.4, b.z);
-      scene.add(instance);
-    }
-  });
+  // Bumpers (jellyfish) are loaded separately by createJellyfishBumpers in main.ts
+  // so the caller can tick the AnimationMixer and react to bumper_hit events.
 
   function render(): void {
     renderer.render(scene, camera);

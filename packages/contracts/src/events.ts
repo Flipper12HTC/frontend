@@ -38,6 +38,11 @@ export interface BallLaunchedEvent {
   payload: { force: number };
 }
 
+export interface BoostChangedEvent {
+  type: 'boost_changed';
+  payload: { active: boolean; multiplier: number; durationMs: number };
+}
+
 export type GameEvent =
   | BallPositionEvent
   | ScoreUpdateEvent
@@ -46,6 +51,7 @@ export type GameEvent =
   | SlingshotHitEvent
   | GameOverEvent
   | FlipperStateEvent
-  | BallLaunchedEvent;
+  | BallLaunchedEvent
+  | BoostChangedEvent;
 
 export type GameEventType = GameEvent['type'];

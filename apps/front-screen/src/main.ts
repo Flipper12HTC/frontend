@@ -5,6 +5,7 @@ import { attachKeyboardForwarder } from './infrastructure/keyboard-forwarder';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
+import { createJellyfishBumpers } from './adapters/meshes/jellyfish-bumpers';
 import { createStartOverlay } from './adapters/hud/start-overlay';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
 
@@ -27,6 +28,7 @@ const { scene, render, resize } = createScene(canvas);
 const ball = createBall(scene);
 const flipperLeft = createFlipper(scene, { side: 'left' });
 const flipperRight = createFlipper(scene, { side: 'right' });
+const jellyfishBumpers = createJellyfishBumpers(scene);
 
 const source = pickSource();
 
@@ -60,6 +62,9 @@ const orchestrator = createRendererOrchestrator(source, {
       startOverlay.show();
     }, 3000);
   },
+  onBumperHit(id) {
+    jellyfishBumpers.hit(id);
+  },
 });
 
 attachKeyboardForwarder({ backendUrl: BACKEND_URL });
@@ -78,8 +83,13 @@ void fetch(`${BACKEND_URL}/game/state`)
     /* backend unreachable, keep overlay */
   });
 
+let lastFrameTime = performance.now();
 function loop(): void {
   requestAnimationFrame(loop);
+  const now = performance.now();
+  const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
+  lastFrameTime = now;
+  jellyfishBumpers.tick(dt);
   render();
 }
 

@@ -6,6 +6,8 @@ export interface Scoreboard {
   readonly ballsLeft: number;
   readonly multiplier: number;
   readonly finalScore: number | null;
+  readonly boostActive: boolean;
+  readonly boostDurationMs: number;
 }
 
 export const INITIAL_SCOREBOARD: Scoreboard = {
@@ -14,6 +16,8 @@ export const INITIAL_SCOREBOARD: Scoreboard = {
   ballsLeft: 3,
   multiplier: 1,
   finalScore: null,
+  boostActive: false,
+  boostDurationMs: 0,
 };
 
 export function withStatus(state: Scoreboard, status: GameStatus): Scoreboard {
@@ -41,5 +45,13 @@ export function withBallDrained(state: Scoreboard, ballsLeft: number): Scoreboar
 }
 
 export function withGameOver(state: Scoreboard, finalScore: number): Scoreboard {
-  return { ...state, status: 'over', finalScore };
+  return { ...state, status: 'over', finalScore, boostActive: false };
+}
+
+export function withBoost(
+  state: Scoreboard,
+  active: boolean,
+  durationMs: number,
+): Scoreboard {
+  return { ...state, boostActive: active, boostDurationMs: durationMs };
 }

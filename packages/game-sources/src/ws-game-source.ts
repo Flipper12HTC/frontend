@@ -19,6 +19,7 @@ const KNOWN_EVENT_TYPES: ReadonlySet<GameEventType> = new Set<GameEventType>([
   'slingshot_hit',
   'game_over',
   'flipper_state',
+  'boost_changed',
 ]);
 
 function isGameEvent(data: unknown): data is GameEvent {
