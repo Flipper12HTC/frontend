@@ -27,12 +27,36 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   renderer.setPixelRatio(1);
   renderer.setSize(RENDER_WIDTH, RENDER_HEIGHT, false);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  const ambient = new THREE.AmbientLight(0xaaccff, 0.4);
   scene.add(ambient);
 
-  const pointLight = new THREE.PointLight(0xffffff, 200);
-  pointLight.position.set(0, 15, 5);
-  scene.add(pointLight);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 3);
+  keyLight.position.set(-6, 10, 4);
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x88bbff, 1.5);
+  fillLight.position.set(6, 8, -4);
+  scene.add(fillLight);
+
+  const texLoader = new THREE.TextureLoader();
+
+  const snowTex = texLoader.load('/snow_01_2k/textures/snow_01_diff_2k.jpg');
+  snowTex.wrapS = snowTex.wrapT = THREE.RepeatWrapping;
+  const snowMat = new THREE.MeshStandardMaterial({ map: snowTex, roughness: 0.9, metalness: 0 });
+  snowMat.onBeforeCompile = (shader) => {
+    shader.vertexShader = `varying vec3 vWPos;\n` + shader.vertexShader.replace(
+      '#include <worldpos_vertex>',
+      '#include <worldpos_vertex>\nvWPos = (modelMatrix * vec4(position, 1.0)).xyz;',
+    );
+    shader.fragmentShader = `varying vec3 vWPos;\n` + shader.fragmentShader.replace(
+      '#include <map_fragment>',
+      `#ifdef USE_MAP
+        vec4 sampledDiffuseColor = texture2D(map, vWPos.xz * 0.12);
+        diffuseColor *= sampledDiffuseColor;
+      #endif`,
+    );
+  };
+
 
   const gltfLoader = new GLTFLoader();
   gltfLoader.load('/models/BaseFlipper.glb', (gltf) => {
@@ -51,6 +75,13 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     base.position.x -= center.x;
     base.position.z -= center.z;
     base.position.y -= box2.min.y;
+
+    base.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        mesh.material = snowMat;
+      }
+    });
 
     scene.add(base);
   });
