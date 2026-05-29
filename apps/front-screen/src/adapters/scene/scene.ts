@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader, OrbitControls, RoomEnvironment } from 'three/examples/jsm/Addons.js';
 import { TABLE } from '@flipper/contracts';
+import { createPhysicsDebug } from './physics-debug';
 
 export interface PinballMeshes {
   flipperLeft: THREE.Object3D;
@@ -14,6 +15,8 @@ export interface SceneContext {
   render: () => void;
   resize: () => void;
   onMeshesReady: (cb: (meshes: PinballMeshes) => void) => void;
+  toggleDebug: () => void;
+  updateDebugBall: (pos: { x: number; y: number; z: number }) => void;
 }
 
 const RENDER_WIDTH = 1080;
@@ -73,13 +76,27 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   scene.add(fillLight);
 
   let meshReadyCb: ((meshes: PinballMeshes) => void) | null = null;
+  let debugBallCb: ((pos: { x: number; y: number; z: number }) => void) | null = null;
+  let debugGroupRef: { visible: boolean } | null = null;
+  let debugEnabled = false;
+  let defaultCamY = 30;
+  let defaultTargetY = 0;
 
   const gltfLoader = new GLTFLoader();
-  gltfLoader.load('/models/pinball_map_v4.glb', (gltf) => {
+  gltfLoader.load('/models/pinball_map_v5.glb', (gltf) => {
     const root = gltf.scene;
 
-    const rawBox = new THREE.Box3().setFromObject(root);
-    const rawSize = rawBox.getSize(new THREE.Vector3());
+    // Use same reference objects as backend physics (BBOX_MESHES) for scale and XZ centre.
+    // getObjectByName matches any Object3D (not just Mesh), handling GLTF node naming.
+    const PHYSICS_REF_NAMES = ['col_floor_playfield_blue', 'flipper_left', 'flipper_right'];
+    const preScaleRef = new THREE.Box3();
+    for (const n of PHYSICS_REF_NAMES) {
+      const obj = root.getObjectByName(n);
+      if (obj) preScaleRef.expandByObject(obj);
+    }
+    if (preScaleRef.isEmpty()) preScaleRef.setFromObject(root);
+
+    const rawSize = preScaleRef.getSize(new THREE.Vector3());
     const sx = TABLE.width / rawSize.x;
     const sz = TABLE.depth / rawSize.z;
     const sy = (sx + sz) / 2;
@@ -87,22 +104,28 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
 
     root.updateWorldMatrix(false, true);
 
-    const pfRef = root.getObjectByName('floor_merged');
-    const refBox = pfRef
-      ? new THREE.Box3().setFromObject(pfRef)
-      : new THREE.Box3().setFromObject(root);
-    const refCenter = refBox.getCenter(new THREE.Vector3());
+    // Post-scale: recompute for XZ centering.
+    const postScaleRef = new THREE.Box3();
+    for (const n of PHYSICS_REF_NAMES) {
+      const obj = root.getObjectByName(n);
+      if (obj) postScaleRef.expandByObject(obj);
+    }
+    if (postScaleRef.isEmpty()) postScaleRef.setFromObject(root);
+    const physicsCenter = postScaleRef.getCenter(new THREE.Vector3());
 
-    root.position.set(-refCenter.x, -refBox.min.y, -refCenter.z);
+    // Y: align physics floor (Y=0) to world Y=0 using the minimum Y of physics
+    // reference meshes. col_floor_merged.max.y is wrong here because that mesh
+    // extends up the walls in the new GLB, pulling the whole model 4 units too low.
+    root.position.set(-physicsCenter.x, -postScaleRef.min.y, -physicsCenter.z);
 
-    const base = root.getObjectByName('floor_base');
+    const base = root.getObjectByName('col_floor_base');
     if (base) base.visible = false;
 
     scene.add(root);
     root.updateWorldMatrix(true, true);
 
     // Large flat surfaces stay smooth; everything else gets flat shading.
-    const SMOOTH_MESHES = new Set(['floor_merged', 'floor_playfield', 'wall_main', 'wall_frame_black']);
+    const SMOOTH_MESHES = new Set(['col_floor_main', 'col_wall_frame_black']);
 
     const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
     root.traverse((obj) => {
@@ -133,21 +156,27 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     });
 
     // --- Camera ---
-    const pfFinal = root.getObjectByName('floor_merged');
-    const pfTopY = pfFinal
-      ? new THREE.Box3().setFromObject(pfFinal).max.y
-      : 0;
-
+    // After the alignment fix above, world Y=0 = physics floor.
+    const pfTopY = 0;
     const halfFov = (camera.fov * Math.PI) / 180 / 2;
     const camHeight = pfTopY + ((TABLE.depth / 2) / Math.tan(halfFov)) * 1.15;
+    defaultCamY = camHeight;
+    defaultTargetY = pfTopY;
     controls.target.set(0, pfTopY, 0);
     camera.position.set(0, camHeight, 0);
     camera.lookAt(0, pfTopY, 0);
     controls.update();
 
+    // --- Physics debug overlay (hidden by default, toggle with D key) ---
+    const debug = createPhysicsDebug(root);
+    scene.add(debug.group);
+    debugBallCb = debug.updateBall;
+    debugGroupRef = debug.group;
+
     // --- Flipper meshes for animation ---
     const flipperLeft = root.getObjectByName('flipper_left');
     const flipperRight = root.getObjectByName('flipper_right');
+
     if (flipperLeft && flipperRight && meshReadyCb) {
       meshReadyCb({ flipperLeft, flipperRight });
     }
@@ -170,6 +199,21 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     resize,
     onMeshesReady(cb) {
       meshReadyCb = cb;
+    },
+    toggleDebug() {
+      debugEnabled = !debugEnabled;
+      if (debugGroupRef) debugGroupRef.visible = debugEnabled;
+      controls.enableRotate = debugEnabled;
+      if (!debugEnabled) {
+        // Reset to default top-down view when leaving debug mode.
+        controls.target.set(0, defaultTargetY, 0);
+        camera.position.set(0, defaultCamY, 0);
+        camera.up.set(0, 0, -1);
+        controls.update();
+      }
+    },
+    updateDebugBall(pos) {
+      debugBallCb?.(pos);
     },
   };
 }

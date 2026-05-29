@@ -23,9 +23,9 @@ export function createFlipper(
   const restAngle = sign * TABLE.flippers.restAngle;
   const activeAngle = sign * TABLE.flippers.activeAngle;
 
-  // Compute pivot from the mesh's actual world bounding box so it matches the
-  // GLB geometry exactly, regardless of scaling / centering applied to the root.
-  // Left flipper rotates around its left (min-X) edge; right around its right (max-X) edge.
+  // Pivot X and Y from the actual mesh bbox (wall-attachment edge, floor elevation).
+  // Pivot Z from TABLE constants — both meshes may have different bbox centres in Z,
+  // TABLE values are the physics source of truth and keep both flippers at the same height.
   const box = new THREE.Box3().setFromObject(mesh);
   const center = box.getCenter(new THREE.Vector3());
   const pivotX = side === 'left' ? box.min.x : box.max.x;

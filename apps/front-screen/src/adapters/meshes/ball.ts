@@ -26,7 +26,7 @@ export function createBall(scene: THREE.Scene): Ball {
   return {
     mesh,
     setPosition(position: BallPosition): void {
-      mesh.position.set(position.x, TABLE.ball.spawn.y, position.z);
+      mesh.position.set(position.x, position.y, position.z);
     },
     setVisible(visible: boolean): void {
       mesh.visible = visible;

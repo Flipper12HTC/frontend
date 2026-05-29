@@ -16,7 +16,16 @@ const BACKEND_URL =
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 
-const { scene, render, resize, onMeshesReady } = createScene(canvas);
+// Debug HUD — coordinates display, hidden by default.
+const coordsDiv = document.createElement('div');
+coordsDiv.style.cssText =
+  'position:fixed;top:8px;left:8px;background:rgba(0,0,0,.75);color:#0ff;' +
+  'padding:6px 10px;font:13px monospace;border-radius:4px;display:none;z-index:999;pointer-events:none';
+document.body.appendChild(coordsDiv);
+
+let debugActive = false;
+
+const { scene, render, resize, onMeshesReady, toggleDebug, updateDebugBall } = createScene(canvas);
 const ball = createBall(scene);
 const source: GameSource = new WsGameSource({ url: WS_URL });
 
@@ -40,7 +49,12 @@ startOverlay.show();
 const orchestrator = createRendererOrchestrator(source, {
   onBallMoved(position) {
     ball.setPosition(position);
-    ball.setVisible(true);
+    ball.setVisible(position.y >= 0);
+    updateDebugBall(position);
+    if (debugActive) {
+      coordsDiv.textContent =
+        `X: ${position.x.toFixed(3)}  Y: ${position.y.toFixed(3)}  Z: ${position.z.toFixed(3)}`;
+    }
   },
   onFlipperChanged(state) {
     flipperLeft?.setState(state);
@@ -58,6 +72,15 @@ const orchestrator = createRendererOrchestrator(source, {
 });
 
 attachKeyboardForwarder({ backendUrl: BACKEND_URL });
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'p' || e.key === 'P') {
+    debugActive = !debugActive;
+    toggleDebug();
+    coordsDiv.style.display = debugActive ? 'block' : 'none';
+    if (!debugActive) coordsDiv.textContent = '';
+  }
+});
 
 window.addEventListener('resize', resize);
 

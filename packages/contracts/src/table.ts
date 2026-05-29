@@ -23,8 +23,8 @@ export const TABLE = {
 
   // Pivot positions synced with backend PLAYFIELD (pinball_map_v4.glb).
   flippers: {
-    left: { x: -1.74, y: 0.40, z: 6.48 },
-    right: { x: 1.53, y: 0.51, z: 6.62 },
+    left: { x: -1.74, y: 0.40, z: 6.574 },
+    right: { x: 1.53, y: 0.51, z: 6.609 },
     length: 3.27,
     restAngle: 0.3,
     activeAngle: -0.5,
@@ -32,7 +32,7 @@ export const TABLE = {
 
   ball: {
     radius: 0.2,
-    spawn: { x: 3.8, y: 0.45, z: 4.0 },
+    spawn: { x: 4.0, y: 0.5, z: 5.0 },
   },
 
   // Synced with backend PLAYFIELD.bumpers (positions extracted from pinball_map_v4.glb).
