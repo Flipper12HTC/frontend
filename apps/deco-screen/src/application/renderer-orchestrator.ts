@@ -26,12 +26,6 @@ export function createRendererOrchestrator(
         source.on('slingshot_hit', (event) => {
           effects.trigger({ kind: 'slingshot', at: { x: event.payload.x, z: event.payload.z } });
         }),
-        source.on('ball_drained', () => {
-          effects.trigger({ kind: 'drain', at: { x: 0, z: 0 } });
-        }),
-        source.on('game_over', () => {
-          effects.trigger({ kind: 'game-over', at: { x: 0, z: 0 } });
-        }),
       );
       source.start();
     },
