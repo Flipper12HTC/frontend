@@ -2,6 +2,7 @@ import type { GameSource } from './ports/game-source';
 import {
   INITIAL_SCOREBOARD,
   withBallDrained,
+  withBoost,
   withGameOver,
   withScore,
   withStatus,
@@ -42,6 +43,9 @@ export function createRendererOrchestrator(source: GameSource, view: ScoreboardV
         }),
         source.on('game_over', (event) => {
           update(withGameOver(state, event.payload.finalScore));
+        }),
+        source.on('boost_changed', (event) => {
+          update(withBoost(state, event.payload.active, event.payload.durationMs));
         }),
       );
       source.start();
