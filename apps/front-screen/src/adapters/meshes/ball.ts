@@ -9,17 +9,17 @@ export interface Ball {
 }
 
 export function createBall(scene: THREE.Scene): Ball {
-  const geo = new THREE.SphereGeometry(TABLE.ball.radius, 32, 32);
+  const geo = new THREE.SphereGeometry(TABLE.ball.radius * 1.0, 32, 32);
   const mat = new THREE.MeshStandardMaterial({
-    color: 0xc0c0c0,
-    roughness: 0.2,
-    metalness: 0.9,
+    color: 0xb0b8c1,
+    roughness: 0.15,
+    metalness: 0.85,
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(TABLE.ball.spawn.x, TABLE.ball.spawn.y, TABLE.ball.spawn.z);
   mesh.visible = false;
 
-  const light = new THREE.PointLight(0x06b6d4, 2, 6);
+  const light = new THREE.PointLight(0xffffff, 1.5, 4);
   mesh.add(light);
   scene.add(mesh);
 

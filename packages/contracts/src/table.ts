@@ -21,18 +21,19 @@ export const TABLE = {
     zMax: 8,
   },
 
-  // Pivot positions synced with backend PLAYFIELD (pinball_map_v4.glb).
+  // Pivot positions synced with backend PLAYFIELD (pinball_map_v5.glb).
   flippers: {
-    left: { x: -1.74, y: 0.40, z: 6.574 },
-    right: { x: 1.53, y: 0.51, z: 6.609 },
+    left: { x: -1.526, y: 0.35, z: 6.635 },
+    right: { x: 1.525, y: 0.35, z: 6.635 },
     length: 3.27,
     restAngle: 0.3,
     activeAngle: -0.5,
   },
 
+  // Synced with backend RapierPhysicsWorld inline spawn (right plunger lane).
   ball: {
     radius: 0.2,
-    spawn: { x: 4.0, y: 0.5, z: 5.0 },
+    spawn: { x: 4.0, y: 0.6, z: 6.0 },
   },
 
   // Synced with backend PLAYFIELD.bumpers (positions extracted from pinball_map_v4.glb).

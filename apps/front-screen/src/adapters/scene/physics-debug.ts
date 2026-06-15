@@ -11,15 +11,16 @@ const C_BALL    = 0x00ffff; // cyan    — ball sphere
 
 // Mirrors WALL_MESHES patterns from backend glb-loader.ts (substring match).
 const WALL_PATTERNS = [
-  'col_wall_frame',      // col_wall_frame_black (outer frame — replaces col_wall_main in v5)
+  'col_wall_frame',
+  'col_wall_main_outer',
   'col_wall_shooter',
   'col_wall_panel',
-  'col_wall_slingshots',
+  'col_wall_left_fill',
+  'col_wall_apron',
   'col_bumper_mini',
   'col_wall_plunger_lane',
-  'col_ref_deco',
   'col_bumper_targets',
-  'col_ref_plunger_star',
+  'col_ref_',
 ];
 function isWallMesh(name: string): boolean {
   return WALL_PATTERNS.some((p) => name.includes(p));
@@ -33,7 +34,7 @@ function isRampMesh(name: string): boolean {
 
 // Floor meshes — mirrors FLOOR_MESHES in glb-loader.ts (exact node names, case-sensitive)
 function isSolMesh(name: string): boolean {
-  return name.startsWith('col_floor_') && name !== 'col_floor_base';
+  return (name.startsWith('col_floor_') || name.startsWith('col_ref_floor_')) && name !== 'col_floor_base';
 }
 
 function wire(geo: THREE.BufferGeometry, color: number): THREE.LineSegments {

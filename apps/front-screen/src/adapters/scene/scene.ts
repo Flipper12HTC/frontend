@@ -38,7 +38,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.75;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 
   // Environment map — soft studio reflections, kept dim so material colours aren't washed out.
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -83,7 +83,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   let defaultTargetY = 0;
 
   const gltfLoader = new GLTFLoader();
-  gltfLoader.load('/models/pinball_map_v5.glb', (gltf) => {
+  gltfLoader.load('/models/bbbbbase.glb', (gltf) => {
     const root = gltf.scene;
 
     // Use same reference objects as backend physics (BBOX_MESHES) for scale and XZ centre.

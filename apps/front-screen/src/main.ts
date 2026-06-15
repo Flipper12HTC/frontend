@@ -71,7 +71,10 @@ const orchestrator = createRendererOrchestrator(source, {
   },
 });
 
-attachKeyboardForwarder({ backendUrl: BACKEND_URL });
+attachKeyboardForwarder({
+  backendUrl: BACKEND_URL,
+  isStartAllowed: () => startOverlay.isVisible(),
+});
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'p' || e.key === 'P') {
