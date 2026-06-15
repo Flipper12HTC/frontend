@@ -83,7 +83,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   let defaultTargetY = 0;
 
   const gltfLoader = new GLTFLoader();
-  gltfLoader.load('/models/bbbbbase.glb', (gltf) => {
+  gltfLoader.load('/models/FlipperBase.glb', (gltf) => {
     const root = gltf.scene;
 
     // Use same reference objects as backend physics (BBOX_MESHES) for scale and XZ centre.

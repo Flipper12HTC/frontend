@@ -21,11 +21,11 @@ export const TABLE = {
     zMax: 8,
   },
 
-  // Pivot positions synced with backend PLAYFIELD (pinball_map_v5.glb).
+  // Pivot positions synced with backend PLAYFIELD (FlipperBase.glb).
   flippers: {
     left: { x: -1.526, y: 0.35, z: 6.635 },
     right: { x: 1.525, y: 0.35, z: 6.635 },
-    length: 3.27,
+    length: 1.144,
     restAngle: 0.3,
     activeAngle: -0.5,
   },
