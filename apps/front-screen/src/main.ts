@@ -6,6 +6,8 @@ import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
 import { createStartOverlay } from './adapters/hud/start-overlay';
+import { createComboHud } from './adapters/hud/combo-hud';
+import { createMilestoneHud } from './adapters/hud/milestone-hud';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
 
 const WS_URL = 'ws://localhost:8080/ws';
@@ -23,10 +25,13 @@ function pickSource(): GameSource {
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 
-const { scene, render, resize } = createScene(canvas);
+const { scene, render, resize, flashBumper } = createScene(canvas);
 const ball = createBall(scene);
 const flipperLeft = createFlipper(scene, { side: 'left' });
 const flipperRight = createFlipper(scene, { side: 'right' });
+
+const comboHud = createComboHud();
+const milestoneHud = createMilestoneHud();
 
 const source = pickSource();
 
@@ -51,14 +56,21 @@ const orchestrator = createRendererOrchestrator(source, {
     flipperLeft.setState(state);
     flipperRight.setState(state);
   },
-  onScoreChanged() {
+  onScoreChanged(score) {
     startOverlay.hide();
+    milestoneHud.checkScore(score);
   },
   onGameOver() {
     ball.setVisible(false);
+    comboHud.reset();
+    milestoneHud.reset();
     setTimeout(() => {
       startOverlay.show();
     }, 3000);
+  },
+  onBumperHit(id) {
+    flashBumper(id);
+    comboHud.registerHit();
   },
 });
 
@@ -80,6 +92,7 @@ void fetch(`${BACKEND_URL}/game/state`)
 
 function loop(): void {
   requestAnimationFrame(loop);
+  ball.animate(performance.now());
   render();
 }
 

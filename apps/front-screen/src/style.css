@@ -25,3 +25,84 @@ canvas {
   max-height: 100vh;
   aspect-ratio: 1080 / 1920;
 }
+
+/* ── Combo streak HUD ────────────────────────────────────────── */
+
+@keyframes combo-pop {
+  0%   { transform: translateX(-50%) scale(0.65); opacity: 0; }
+  35%  { transform: translateX(-50%) scale(1.28); opacity: 1; }
+  60%  { transform: translateX(-50%) scale(0.94); }
+  80%  { transform: translateX(-50%) scale(1.04); }
+  100% { transform: translateX(-50%) scale(1);    opacity: 1; }
+}
+
+.combo-hud {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 50;
+  text-align: center;
+  display: none;
+}
+
+.combo-hud.combo-pop {
+  animation: combo-pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.combo-count {
+  font-family: 'Bangers', cursive;
+  font-size: clamp(3rem, 6vw, 5rem);
+  color: #ff6b35;
+  text-shadow:
+    0 0 10px rgba(255, 107, 53, 0.95),
+    0 0 30px rgba(255, 107, 53, 0.55),
+    0 0 60px rgba(255, 107, 53, 0.25);
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.combo-label {
+  font-family: 'Bangers', cursive;
+  font-size: clamp(0.85rem, 1.8vw, 1.3rem);
+  letter-spacing: 0.52em;
+  color: rgba(255, 215, 0, 0.82);
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.55);
+}
+
+/* ── Milestone flash HUD ─────────────────────────────────────── */
+
+@keyframes milestone-in {
+  0%   { transform: translateX(-50%) scale(0.75); opacity: 0; }
+  20%  { transform: translateX(-50%) scale(1.1);  opacity: 1; }
+  40%  { transform: translateX(-50%) scale(0.97); }
+  55%  { transform: translateX(-50%) scale(1.03); }
+  70%  { transform: translateX(-50%) scale(1);    opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-14px); opacity: 0; }
+}
+
+.milestone-hud {
+  position: fixed;
+  top: 44%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 60;
+  font-family: 'Bangers', cursive;
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  letter-spacing: 0.16em;
+  text-align: center;
+  white-space: nowrap;
+  color: #ffd700;
+  text-shadow:
+    0 0 12px rgba(255, 215, 0, 0.95),
+    0 0 35px rgba(255, 215, 0, 0.5),
+    0 0 70px rgba(255, 140, 0, 0.3);
+  opacity: 0;
+}
+
+.milestone-hud.milestone-show {
+  animation: milestone-in 2.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
