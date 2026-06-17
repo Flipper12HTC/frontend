@@ -1,17 +1,354 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&family=Patrick+Hand&display=swap');
 @import 'tailwindcss';
 @import '@flipper/design-system/theme.css';
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root {
+  --dc-yellow:      #ffec1f;
+  --dc-orange:      #ff8a00;
+  --dc-brown:       #5b3a17;
+  --dc-brown-deep:  #3a230d;
+  --dc-pink:        #ff79b0;
+  --dc-red:         #e23636;
+  --dc-cyan-light:  #cdf4ff;
+  --dc-cyan:        #6ed8ff;
+  --dc-blue:        #1d8bd6;
+  --dc-blue-deep:   #0a4a8a;
+  --dc-sand-top:    #fff4d4;
+  --dc-sand:        #f7e1a8;
+  --dc-sand-deep:   #e6c275;
+
+  --font-cartoon: 'Luckiest Guy', 'Bangers', cursive;
+  --font-cartoon-alt: 'Bangers', 'Luckiest Guy', cursive;
 }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; overflow: hidden; }
 
 body {
-  overflow: hidden;
-  background: var(--color-arcade-black);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive, sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% -10%, #fffbe0 0%, transparent 55%),
+    linear-gradient(180deg,
+      var(--dc-cyan-light) 0%,
+      var(--dc-cyan)       22%,
+      var(--dc-blue)       60%,
+      var(--dc-blue-deep)  100%);
 }
 
+/* ── Sun rays ──────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -10vh -10vw -10vh -10vw;
+  pointer-events: none;
+  background:
+    conic-gradient(from 200deg at 50% -8%,
+      transparent 0deg,
+      rgba(255,255,220,.20) 8deg,  transparent 14deg,
+      transparent 22deg,
+      rgba(255,255,220,.14) 28deg, transparent 34deg,
+      transparent 46deg,
+      rgba(255,255,220,.20) 52deg, transparent 58deg,
+      transparent 68deg,
+      rgba(255,255,220,.12) 74deg, transparent 80deg,
+      transparent 96deg,
+      rgba(255,255,220,.18) 102deg,transparent 110deg,
+      transparent 320deg);
+  mask-image: linear-gradient(180deg, rgba(0,0,0,.85) 0%, rgba(0,0,0,.4) 40%, transparent 70%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.85) 0%, rgba(0,0,0,.4) 40%, transparent 70%);
+  z-index: 0;
+}
+
+/* ── Three.js particle canvas — transparent, sits in background ── */
 canvas {
+  position: fixed;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1;
   display: block;
+  pointer-events: none;
+}
+
+/* ── Sand floor (landscape = shorter than portrait) ─────────────── */
+.dc-sand {
+  position: fixed;
+  left: -5vw;
+  right: -5vw;
+  bottom: 0;
+  height: 26vh;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dc-sand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 100%, var(--dc-sand-deep) 0%, transparent 75%),
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(255,244,212,.55) 12%,
+      var(--dc-sand-top) 28%,
+      var(--dc-sand)     65%,
+      var(--dc-sand-deep) 100%);
+}
+
+/* Organic bumpy sand line at top */
+.dc-sand::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: -3px;
+  height: 70px;
+  background-image:
+    radial-gradient(ellipse 90px 26px at  5% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 120px 34px at 13% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 80px 24px at 22% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 110px 30px at 32% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 90px 26px at 42% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 120px 30px at 52% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 80px 22px at 63% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 110px 28px at 74% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 90px 24px at 85% 100%, var(--dc-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 80px 22px at 95% 100%, var(--dc-sand-top) 60%, transparent 62%);
+}
+
+/* ── Bubbles ─────────────────────────────────────────────────── */
+.dc-bubbles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.dc-bubble {
+  position: absolute;
+  bottom: -80px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.35) 30%, rgba(255,255,255,.05) 60%, transparent 70%);
+  border: 2px solid rgba(255,255,255,.5);
+  box-shadow: 0 0 12px rgba(255,255,255,.35);
+  animation-name: dc-bubble-rise;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in;
+}
+
+@keyframes dc-bubble-rise {
+  0%   { transform: translate(0, 0) scale(.6); opacity: 0; }
+  10%  { opacity: .9; }
+  50%  { transform: translate(18px, -55vh) scale(1); }
+  90%  { opacity: .85; }
+  100% { transform: translate(-18px, -115vh) scale(1.05); opacity: 0; }
+}
+
+/* ── Flowers ─────────────────────────────────────────────────── */
+.dc-flowers {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  overflow: hidden;
+}
+
+.dc-flower {
+  position: absolute;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.2));
+  animation: dc-flower-sway 6s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+@keyframes dc-flower-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg);  }
+}
+
+/* ── Houses ──────────────────────────────────────────────────── */
+.dc-houses {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.dc-house {
+  position: absolute;
+  bottom: 0;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.4));
+  animation: dc-house-bob 6s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.dc-house img { display: block; width: 100%; height: auto; }
+
+.dc-house--squidward img {
+  mix-blend-mode: lighten;
+  filter: brightness(1.05) contrast(1.25) saturate(1.3);
+}
+.dc-house--patrick img { filter: saturate(1.15) brightness(1.05); }
+
+@keyframes dc-house-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* Landscape: houses spread across the full bottom width */
+.dc-house--bob {
+  left: 1vw;
+  bottom: 5vh;
+  width: clamp(120px, 12vw, 200px);
+  animation-delay: -0.5s;
+}
+.dc-house--squidward {
+  left: clamp(120px, 13vw, 210px);
+  bottom: 9vh;
+  width: clamp(100px, 10vw, 160px);
+  animation-delay: -2s;
+}
+.dc-house--krusty {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 4vh;
+  width: clamp(180px, 16vw, 280px);
+  animation-delay: -1s;
+}
+.dc-house--sandy {
+  right: clamp(120px, 13vw, 210px);
+  bottom: 7vh;
+  width: clamp(130px, 12vw, 200px);
+  animation-delay: -3s;
+}
+.dc-house--patrick {
+  right: 1vw;
+  bottom: 5vh;
+  width: clamp(100px, 10vw, 170px);
+  animation-delay: -4s;
+}
+
+/* ── Leaderboard root ─────────────────────────────────────────── */
+.dc-root {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2.5vh 6vw 28vh;
+  pointer-events: none;
+  gap: 1.5vh;
+}
+
+/* ── Logo ─────────────────────────────────────────────────────── */
+.dc-logo {
+  width: clamp(160px, 16vw, 280px);
+  height: auto;
+  filter:
+    drop-shadow(0 6px 0 rgba(0,0,0,.25))
+    drop-shadow(0 12px 24px rgba(0,0,0,.4));
+  animation: dc-wobble 4s ease-in-out infinite;
+}
+
+@keyframes dc-wobble {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50%      { transform: rotate(1.5deg) translateY(-4px); }
+}
+
+/* ── Title ────────────────────────────────────────────────────── */
+.dc-title {
+  font-family: var(--font-cartoon-alt);
+  font-size: clamp(1.4rem, 3vw, 3rem);
+  letter-spacing: 0.28em;
+  color: var(--dc-cyan-light);
+  -webkit-text-stroke: 2px var(--dc-brown);
+  text-shadow: 0 4px 0 var(--dc-brown), 0 0 20px rgba(110,216,255,.6);
+}
+
+/* ── Two-column entry grid ───────────────────────────────────── */
+.dc-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 5vw;
+  width: 100%;
+  max-width: 72vw;
+}
+
+.dc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4vh;
+  list-style: none;
+}
+
+/* ── Single entry row ────────────────────────────────────────── */
+.dc-entry {
+  display: grid;
+  grid-template-columns: 4rem 1fr auto;
+  align-items: baseline;
+  gap: 1.5vw;
+  padding: 0.5vh 0;
+  border-bottom: 1.5px solid rgba(255,255,255,.1);
+  animation: dc-slide-in .3s ease-out both;
+}
+
+@keyframes dc-slide-in {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.dc-rank {
+  font-family: var(--font-cartoon);
+  font-size: clamp(1.2rem, 2vw, 2.2rem);
+  color: var(--dc-cyan);
+  text-shadow: 0 0 8px rgba(110,216,255,.6);
+  letter-spacing: .04em;
+}
+.dc-rank.gold   { color: var(--dc-yellow); text-shadow: 0 0 10px rgba(255,236,31,.7); }
+.dc-rank.silver { color: #d4d4d4;          text-shadow: 0 0 8px rgba(212,212,212,.5); }
+.dc-rank.bronze { color: #cd7f32;          text-shadow: 0 0 8px rgba(205,127,50,.5);  }
+
+.dc-player {
+  font-family: 'Patrick Hand', cursive;
+  font-size: clamp(.85rem, 1.4vw, 1.5rem);
+  color: rgba(255,255,255,.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dc-points {
+  font-family: var(--font-cartoon);
+  font-size: clamp(1.2rem, 2vw, 2.2rem);
+  color: var(--dc-yellow);
+  -webkit-text-stroke: 1.5px var(--dc-brown);
+  text-shadow: 0 2px 0 var(--dc-brown), 0 0 14px rgba(255,236,31,.5);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* #1 gets a trophy treatment */
+.dc-entry.is-first .dc-rank {
+  font-size: clamp(1.4rem, 2.4vw, 2.6rem);
+}
+.dc-entry.is-first .dc-points {
+  font-size: clamp(1.4rem, 2.4vw, 2.6rem);
+  color: var(--dc-orange);
+  text-shadow: 0 2px 0 var(--dc-brown), 0 0 20px rgba(255,140,0,.7);
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.dc-empty {
+  font-family: 'Patrick Hand', cursive;
+  font-size: clamp(.9rem, 1.6vw, 1.4rem);
+  color: rgba(255,255,255,.4);
+  font-style: italic;
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3vh 0;
 }
