@@ -1,6 +1,7 @@
 export interface StartOverlayHandle {
   show: () => void;
   hide: () => void;
+  isVisible: () => boolean;
   setEnabled: (enabled: boolean, reason?: string) => void;
   mount: () => HTMLElement;
   dispose: () => void;
@@ -46,6 +47,9 @@ export function createStartOverlay(onStart: () => void): StartOverlayHandle {
     },
     hide(): void {
       root.style.display = 'none';
+    },
+    isVisible(): boolean {
+      return root.style.display !== 'none';
     },
     setEnabled(enabled: boolean, reason?: string): void {
       button.disabled = !enabled;

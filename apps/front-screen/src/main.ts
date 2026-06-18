@@ -5,41 +5,45 @@ import { attachKeyboardForwarder } from './infrastructure/keyboard-forwarder';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
+import type { Flipper } from './adapters/meshes/flipper';
 import { createJellyfishBumpers } from './adapters/meshes/jellyfish-bumpers';
 import { createStartOverlay } from './adapters/hud/start-overlay';
-import { MockGameSource, WsGameSource } from '@flipper/game-sources';
+import { WsGameSource } from '@flipper/game-sources';
 
 const WS_URL = 'ws://localhost:8080/ws';
 const BACKEND_URL =
   (import.meta.env.VITE_BACKEND_URL as string | undefined) ?? 'http://localhost:8080';
 
-function pickSource(): GameSource {
-  const kind = import.meta.env.VITE_GAME_SOURCE ?? (import.meta.env.DEV ? 'mock' : 'ws');
-  if (kind === 'ws') {
-    return new WsGameSource({ url: WS_URL });
-  }
-  return new MockGameSource();
-}
-
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 
-const { scene, render, resize } = createScene(canvas);
+// Debug HUD — coordinates display, hidden by default.
+const coordsDiv = document.createElement('div');
+coordsDiv.style.cssText =
+  'position:fixed;top:8px;left:8px;background:rgba(0,0,0,.75);color:#0ff;' +
+  'padding:6px 10px;font:13px monospace;border-radius:4px;display:none;z-index:999;pointer-events:none';
+document.body.appendChild(coordsDiv);
+
+let debugActive = false;
+
+const { scene, render, resize, onMeshesReady, toggleDebug, updateDebugBall } = createScene(canvas);
 const ball = createBall(scene);
-const flipperLeft = createFlipper(scene, { side: 'left' });
-const flipperRight = createFlipper(scene, { side: 'right' });
+const source: GameSource = new WsGameSource({ url: WS_URL });
+
+let flipperLeft: Flipper | null = null;
+let flipperRight: Flipper | null = null;
 const jellyfishBumpers = createJellyfishBumpers(scene);
 
-const source = pickSource();
+onMeshesReady(({ flipperLeft: leftMesh, flipperRight: rightMesh }) => {
+  flipperLeft = createFlipper(scene, leftMesh, { side: 'left' });
+  flipperRight = createFlipper(scene, rightMesh, { side: 'right' });
+});
 
 const startOverlay = createStartOverlay(() => {
-  void fetch(`${BACKEND_URL}/game/start`, { method: 'POST' })
-    .then((r) => {
-      if (r.ok) startOverlay.hide();
-    })
-    .catch(() => {
-      /* backend unreachable, keep overlay */
-    });
+  startOverlay.hide();
+  void fetch(`${BACKEND_URL}/game/start`, { method: 'POST' }).catch(() => {
+    /* backend unreachable — overlay already hidden, map stays visible */
+  });
 });
 startOverlay.mount();
 startOverlay.show();
@@ -47,11 +51,16 @@ startOverlay.show();
 const orchestrator = createRendererOrchestrator(source, {
   onBallMoved(position) {
     ball.setPosition(position);
-    ball.setVisible(true);
+    ball.setVisible(position.y >= 0);
+    updateDebugBall(position);
+    if (debugActive) {
+      coordsDiv.textContent =
+        `X: ${position.x.toFixed(3)}  Y: ${position.y.toFixed(3)}  Z: ${position.z.toFixed(3)}`;
+    }
   },
   onFlipperChanged(state) {
-    flipperLeft.setState(state);
-    flipperRight.setState(state);
+    flipperLeft?.setState(state);
+    flipperRight?.setState(state);
   },
   onScoreChanged() {
     startOverlay.hide();
@@ -67,7 +76,19 @@ const orchestrator = createRendererOrchestrator(source, {
   },
 });
 
-attachKeyboardForwarder({ backendUrl: BACKEND_URL });
+attachKeyboardForwarder({
+  backendUrl: BACKEND_URL,
+  isStartAllowed: () => startOverlay.isVisible(),
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'p' || e.key === 'P') {
+    debugActive = !debugActive;
+    toggleDebug();
+    coordsDiv.style.display = debugActive ? 'block' : 'none';
+    if (!debugActive) coordsDiv.textContent = '';
+  }
+});
 
 window.addEventListener('resize', resize);
 
