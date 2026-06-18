@@ -23,10 +23,10 @@ export const TABLE = {
 
   // Pivot positions synced with backend PLAYFIELD (FlipperBase.glb).
   flippers: {
-    left: { x: -1.526, y: 0.35, z: 6.635 },
-    right: { x: 1.525, y: 0.35, z: 6.635 },
+    left: { x: -1.7, y: 0.5, z: 6.48 },
+    right: { x: 1.5, y: 0.5, z: 6.48 },
     length: 1.144,
-    restAngle: 0.3,
+    restAngle: 0.048,
     activeAngle: -0.5,
   },
 

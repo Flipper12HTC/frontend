@@ -13,6 +13,9 @@ export interface FlipperOptions {
 
 const ROTATION_SPEED = 18;
 
+// Playfield incline (rad). The flipper hinges about the playfield normal, not world-Y.
+const PLAYFIELD_TILT = 0.266;
+
 export function createFlipper(
   scene: THREE.Scene,
   mesh: THREE.Object3D,
@@ -22,21 +25,27 @@ export function createFlipper(
   const sign = side === 'left' ? -1 : 1;
   const restAngle = sign * TABLE.flippers.restAngle;
   const activeAngle = sign * TABLE.flippers.activeAngle;
+  const cfg = side === 'left' ? TABLE.flippers.left : TABLE.flippers.right;
 
-  // Pivot X and Y from the actual mesh bbox (wall-attachment edge, floor elevation).
-  // Pivot Z from TABLE constants — both meshes may have different bbox centres in Z,
-  // TABLE values are the physics source of truth and keep both flippers at the same height.
   const box = new THREE.Box3().setFromObject(mesh);
   const center = box.getCenter(new THREE.Vector3());
-  const pivotX = side === 'left' ? box.min.x : box.max.x;
-  const pivotY = box.min.y;
-  const pivotZ = center.z;
+  const glbPivotX = side === 'left' ? box.min.x : box.max.x;
+  const glbPivotY = box.min.y;
+  const glbPivotZ = center.z;
 
-  const group = new THREE.Group();
-  group.position.set(pivotX, pivotY, pivotZ);
-  scene.add(group);
-  group.attach(mesh);
-  group.rotation.y = restAngle;
+  // Tilt frame: hinge rotates in-plane with the inclined table.
+  const tiltGroup = new THREE.Group();
+  tiltGroup.position.set(glbPivotX, glbPivotY, glbPivotZ);
+  tiltGroup.rotation.x = PLAYFIELD_TILT;
+  scene.add(tiltGroup);
+
+  const hingeGroup = new THREE.Group();
+  tiltGroup.add(hingeGroup);
+  hingeGroup.attach(mesh); // keep mesh world transform
+  hingeGroup.rotation.y = restAngle;
+
+  // Position the pivot at the config point (TABLE.flippers; mirror backend PLAYFIELD.flippers).
+  tiltGroup.position.set(cfg.x, cfg.y, cfg.z);
 
   let targetAngle = restAngle;
   let currentAngle = restAngle;
@@ -49,13 +58,13 @@ export function createFlipper(
     const delta = targetAngle - currentAngle;
     const step = Math.sign(delta) * Math.min(Math.abs(delta), ROTATION_SPEED * dt);
     currentAngle += step;
-    group.rotation.y = currentAngle;
+    hingeGroup.rotation.y = currentAngle;
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 
   return {
-    object: group,
+    object: tiltGroup,
     setState(state: FlipperState): void {
       if (state.side !== side) return;
       targetAngle = state.active ? activeAngle : restAngle;
