@@ -38,36 +38,36 @@ export function createFlipper(scene: THREE.Scene, options: FlipperOptions): Flip
   geo.translate(0, 0, -THICKNESS / 2);
   geo.rotateX(-Math.PI / 2);
 
-  const mat = new THREE.MeshStandardMaterial({
-    color: side === 'left' ? 0xef4444 : 0x3b82f6,
-    roughness: 0.4,
-    metalness: 0.6,
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: 0x1a7abf,
+    roughness: 0.15,
+    metalness: 0.7,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.1,
   });
 
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(pivot.x, pivot.y, pivot.z);
 
   const sign = side === 'left' ? -1 : 1;
-  const restAngle = sign * TABLE.flippers.restAngle;
+  const restAngle   = sign * TABLE.flippers.restAngle;
   const activeAngle = sign * TABLE.flippers.activeAngle;
 
-  if (side === 'right') {
-    mesh.scale.x = -1;
-  }
+  if (side === 'right') mesh.scale.x = -1;
   mesh.rotation.y = restAngle;
 
   scene.add(mesh);
 
-  let targetAngle = restAngle;
+  let targetAngle  = restAngle;
   let currentAngle = restAngle;
-  let lastTime = performance.now();
+  let lastTime     = performance.now();
 
   function tick(): void {
     const now = performance.now();
-    const dt = (now - lastTime) / 1000;
-    lastTime = now;
+    const dt  = (now - lastTime) / 1000;
+    lastTime  = now;
     const delta = targetAngle - currentAngle;
-    const step = Math.sign(delta) * Math.min(Math.abs(delta), ROTATION_SPEED * dt);
+    const step  = Math.sign(delta) * Math.min(Math.abs(delta), ROTATION_SPEED * dt);
     currentAngle += step;
     mesh.rotation.y = currentAngle;
     requestAnimationFrame(tick);

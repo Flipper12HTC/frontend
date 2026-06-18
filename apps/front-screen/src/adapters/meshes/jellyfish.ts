@@ -63,7 +63,7 @@ export function createAllJellyfish(scene: THREE.Scene): {
     }
 
     // Pink glow from inside the bell
-    const light = new THREE.PointLight(0xff55cc, 16, 5.5);
+    const light = new THREE.PointLight(0xff55cc, 5, 3.5);
     group.add(light);
 
     scene.add(group);
@@ -94,7 +94,7 @@ export function createAllJellyfish(scene: THREE.Scene): {
           jf.flashLife = Math.max(0, jf.flashLife - dt * 1.6);
           jf.bellMat.emissiveIntensity = 0.22 + jf.flashLife * 4.5;
           jf.bellMat.opacity = 0.62 + jf.flashLife * 0.35;
-          jf.light.intensity = 16 + jf.flashLife * 95;
+          jf.light.intensity = 5 + jf.flashLife * 35;
           // Flash colour shifts from pink → white-hot
           jf.bellMat.emissive.setRGB(
             1,
@@ -104,7 +104,7 @@ export function createAllJellyfish(scene: THREE.Scene): {
         } else {
           jf.bellMat.emissiveIntensity = 0.22;
           jf.bellMat.opacity = 0.62;
-          jf.light.intensity = 16;
+          jf.light.intensity = 5;
           jf.bellMat.emissive.setHex(0xff33aa);
         }
       }
