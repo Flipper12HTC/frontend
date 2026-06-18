@@ -7,6 +7,7 @@ export type {
   SlingshotHitEvent,
   GameOverEvent,
   FlipperStateEvent,
+  BoostChangedEvent,
   GameEvent,
   GameEventType,
 } from './events';

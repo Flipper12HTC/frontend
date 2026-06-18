@@ -6,6 +6,7 @@ export interface RendererCallbacks {
   onFlipperChanged: (state: FlipperState) => void;
   onScoreChanged?: (score: number, ballsLeft: number) => void;
   onGameOver?: (finalScore: number) => void;
+  onBumperHit?: (id: string) => void;
 }
 
 export interface Orchestrator {
@@ -43,6 +44,15 @@ export function createRendererOrchestrator(
       unsubs.push(
         source.on('game_over', (event) => {
           overCb(event.payload.finalScore);
+        }),
+      );
+    }
+
+    const bumperCb = callbacks.onBumperHit;
+    if (bumperCb) {
+      unsubs.push(
+        source.on('bumper_hit', (event) => {
+          bumperCb(event.payload.id);
         }),
       );
     }
