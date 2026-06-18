@@ -12,53 +12,62 @@ export interface LeaderboardView {
 
 export function createLeaderboardView(): LeaderboardView {
   const root = document.createElement('section');
-  root.className =
-    'fixed inset-0 z-10 flex flex-col items-center justify-center gap-6 ' +
-    'px-[5vw] py-[4vh] text-score-primary font-hud pointer-events-none';
+  root.className = 'sb-leaderboard';
 
   const title = document.createElement('h1');
-  title.className =
-    'text-[clamp(2rem,5vw,5rem)] font-display tracking-[0.3em] text-neon-pink uppercase';
-  title.textContent = '★ HIGH SCORES ★';
+  title.className = 'sb-lb-title';
+  title.textContent = 'HIGH SCORES';
   root.appendChild(title);
 
+  const panel = document.createElement('div');
+  panel.className = 'sb-lb-panel';
+  root.appendChild(panel);
+
   const list = document.createElement('ol');
-  list.className =
-    'flex flex-col w-full max-w-[80vw] gap-2 ' +
-    'text-[clamp(1rem,2.2vw,2rem)]';
-  root.appendChild(list);
+  list.className = 'sb-lb-list';
+  panel.appendChild(list);
+
+  let previousKeys = new Set<string>();
+  const keyOf = (e: ScoreEntry): string => `${e.playerId}:${e.points}:${e.achievedAt}`;
 
   return {
     render(entries: ScoreEntry[]): void {
       list.innerHTML = '';
+
       if (entries.length === 0) {
         const empty = document.createElement('li');
-        empty.className = 'text-center text-score-muted italic';
-        empty.textContent = 'no scores yet — play to claim the throne';
+        empty.className = 'sb-lb-empty';
+        empty.textContent = 'No scores yet — pull the plunger to claim the throne!';
         list.appendChild(empty);
+        previousKeys = new Set();
         return;
       }
+
+      const nextKeys = new Set<string>();
       for (const e of entries) {
+        const key = keyOf(e);
+        nextKeys.add(key);
+
         const li = document.createElement('li');
-        li.className =
-          'grid grid-cols-[3rem_1fr_auto] items-baseline gap-[2vw] ' +
-          'border-b border-white/10 py-[0.4vh]';
+        li.className = `sb-lb-row sb-lb-row--${e.rank}`;
+        if (!previousKeys.has(key)) li.classList.add('is-new');
 
         const rank = document.createElement('span');
-        rank.className = 'text-neon-cyan font-display';
-        rank.textContent = String(e.rank).padStart(2, '0');
+        rank.className = 'sb-lb-rank';
+        rank.textContent = String(e.rank);
 
         const player = document.createElement('span');
-        player.className = 'text-score-muted truncate';
+        player.className = 'sb-lb-player';
         player.textContent = e.playerId;
 
         const points = document.createElement('span');
-        points.className = 'text-score-primary font-display text-right';
-        points.textContent = e.points.toLocaleString();
+        points.className = 'sb-lb-points';
+        points.textContent = e.points.toLocaleString('en-US');
 
         li.append(rank, player, points);
         list.appendChild(li);
       }
+      previousKeys = nextKeys;
     },
     mount(): HTMLElement {
       document.body.appendChild(root);
