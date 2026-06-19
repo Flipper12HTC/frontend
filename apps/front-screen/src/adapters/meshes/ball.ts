@@ -11,15 +11,19 @@ export interface Ball {
 export function createBall(scene: THREE.Scene): Ball {
   const geo = new THREE.SphereGeometry(TABLE.ball.radius * 1.0, 32, 32);
   const mat = new THREE.MeshStandardMaterial({
-    color: 0xb0b8c1,
-    roughness: 0.15,
-    metalness: 0.85,
+    color: 0xffd700,        // jaune doré SpongeBob
+    roughness: 0.05,
+    metalness: 0.92,
+    emissive: new THREE.Color(0xff9900),
+    emissiveIntensity: 0.18,
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(TABLE.ball.spawn.x, TABLE.ball.spawn.y, TABLE.ball.spawn.z);
+  mesh.castShadow = true;
   mesh.visible = false;
 
-  const light = new THREE.PointLight(0xffffff, 1.5, 4);
+  // Lueur chaude autour de la bille
+  const light = new THREE.PointLight(0xffcc33, 2.8, 5.5);
   mesh.add(light);
   scene.add(mesh);
 
