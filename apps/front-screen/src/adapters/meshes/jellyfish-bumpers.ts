@@ -10,10 +10,11 @@ interface BumperInstance {
   mixer: THREE.AnimationMixer;
   idleAction: THREE.AnimationAction | null;
   hitAction: THREE.AnimationAction | null;
-  // Fallback animation state when the GLB has no clips
   basePosY: number;
   baseScale: number;
-  hitFallback: number; // remaining time of the procedural punch (seconds), 0 = idle
+  hitFallback: number;
+  light: THREE.PointLight;
+  hitFlash: number; // remaining flash time (seconds)
 }
 
 export interface JellyfishBumpers {
@@ -38,7 +39,11 @@ function pickClip(
   return clips[fallbackIndex] ?? null;
 }
 
-export function createJellyfishBumpers(scene: THREE.Scene): JellyfishBumpers {
+export function createJellyfishBumpers(
+  scene: THREE.Scene,
+  ids?: string[],
+  getFloorY?: (x: number, z: number) => number,
+): JellyfishBumpers {
   const instances: BumperInstance[] = [];
   const sparks: SparkEffect[] = [];
 
@@ -56,14 +61,31 @@ export function createJellyfishBumpers(scene: THREE.Scene): JellyfishBumpers {
       const tplSize = tplBox.getSize(new THREE.Vector3());
       const tplRadius = Math.max(tplSize.x, tplSize.z) / 2 || 1;
 
-      for (const b of TABLE.bumpers) {
+      const bumpers = ids ? TABLE.bumpers.filter(b => ids.includes(b.id)) : TABLE.bumpers;
+      for (const b of bumpers) {
         // SkeletonUtils.clone keeps skinned meshes hooked to a fresh skeleton
         // — required so each instance can run its own AnimationMixer.
         const root = cloneSkeleton(template);
         const normalize = b.radius / tplRadius;
         const finalScale = normalize * b.scale * SCALE_MULT;
-        root.scale.setScalar(finalScale);
-        root.position.set(b.x, Y_OFFSET, b.z);
+        root.scale.set(finalScale, finalScale * 0.45, finalScale);
+        const posY = getFloorY ? getFloorY(b.x, b.z) : Y_OFFSET;
+        root.position.set(b.x, posY, b.z);
+
+        // Matériau émissif léger sur tous les meshes de la méduse
+        root.traverse((obj) => {
+          if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+            obj.material = obj.material.clone();
+            obj.material.emissive = new THREE.Color(0xff66cc);
+            obj.material.emissiveIntensity = 0.18;
+          }
+        });
+
+        // Lumière douce qui pulse sous la méduse
+        const light = new THREE.PointLight(0xff88dd, 0.6, 2.5);
+        light.position.set(b.x, posY + 0.3, b.z);
+        scene.add(light);
+
         scene.add(root);
 
         const mixer = new THREE.AnimationMixer(root);
@@ -93,6 +115,8 @@ export function createJellyfishBumpers(scene: THREE.Scene): JellyfishBumpers {
           basePosY: root.position.y,
           baseScale: finalScale,
           hitFallback: 0,
+          light,
+          hitFlash: 0,
         });
       }
     },
@@ -102,14 +126,15 @@ export function createJellyfishBumpers(scene: THREE.Scene): JellyfishBumpers {
     },
   );
 
+  const FLASH_DURATION = 0.25;
+
   function triggerHit(inst: BumperInstance): void {
+    inst.hitFlash = FLASH_DURATION;
     if (inst.hitAction) {
       inst.hitAction.stop();
       inst.hitAction.reset();
       inst.hitAction.play();
-      // After hit animation, idle keeps running (we never stopped it)
     } else {
-      // Procedural fallback: squash + slight upward kick
       inst.hitFallback = HIT_FALLBACK_DURATION;
     }
   }
@@ -122,23 +147,36 @@ export function createJellyfishBumpers(scene: THREE.Scene): JellyfishBumpers {
       sparks.push(createElectricity(scene, inst.root.position));
     },
     tick(dt: number): void {
+      const t = performance.now() * 0.001;
       for (const inst of instances) {
         inst.mixer.update(dt);
 
-        // Procedural idle bob (only kicks in if no idleAction was loaded)
-        if (!inst.idleAction) {
-          const t = performance.now() * 0.002 + inst.basePosY;
-          inst.root.position.y = inst.basePosY + Math.sin(t) * 0.06;
+        // Pulse lumière idle — douce et lente
+        const idlePulse = 0.5 + Math.sin(t * 1.4 + inst.basePosY) * 0.2;
+
+        // Flash au hit
+        if (inst.hitFlash > 0) {
+          inst.hitFlash = Math.max(0, inst.hitFlash - dt);
+          const k = inst.hitFlash / FLASH_DURATION;
+          inst.light.intensity = 0.6 + Math.sin(k * Math.PI) * 1.8;
+        } else {
+          inst.light.intensity = idlePulse;
         }
 
-        // Procedural hit punch (only kicks in if no hitAction was loaded)
+        // Procedural idle bob
+        if (!inst.idleAction) {
+          inst.root.position.y = inst.basePosY + Math.sin(t * 2 + inst.basePosY) * 0.06;
+        }
+
+        // Procedural hit punch
         if (inst.hitFallback > 0) {
           inst.hitFallback = Math.max(0, inst.hitFallback - dt);
-          const k = inst.hitFallback / HIT_FALLBACK_DURATION; // 1 → 0
-          const punch = Math.sin(k * Math.PI); // 0 → 1 → 0
-          inst.root.scale.setScalar(inst.baseScale * (1 + punch * 0.25));
+          const k = inst.hitFallback / HIT_FALLBACK_DURATION;
+          const punch = Math.sin(k * Math.PI);
+          const s = inst.baseScale * (1 + punch * 0.25);
+          inst.root.scale.set(s, s * 0.45, s);
         } else if (!inst.hitAction) {
-          inst.root.scale.setScalar(inst.baseScale);
+          inst.root.scale.set(inst.baseScale, inst.baseScale * 0.45, inst.baseScale);
         }
       }
 

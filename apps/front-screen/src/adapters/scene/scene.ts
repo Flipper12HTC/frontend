@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { GLTFLoader, OrbitControls, RoomEnvironment, EXRLoader } from 'three/examples/jsm/Addons.js';
+import { GLTFLoader, OrbitControls, RoomEnvironment } from 'three/examples/jsm/Addons.js';
 import { TABLE } from '@flipper/contracts';
 import { createPhysicsDebug } from './physics-debug';
+import { createJellyfishBumpers, type JellyfishBumpers } from '../meshes/jellyfish-bumpers';
 
 export interface PinballMeshes {
   flipperLeft: THREE.Object3D;
@@ -19,6 +20,7 @@ export interface SceneContext {
   updateDebugBall: (pos: { x: number; y: number; z: number }) => void;
   addBallTrail: (pos: { x: number; y: number; z: number }) => void;
   triggerShake: () => void;
+  jellyfishBumpers: JellyfishBumpers;
 }
 
 const RENDER_WIDTH = 1080;
@@ -99,39 +101,41 @@ function createBubbleLayer(
 }
 
 // ── Caustiques sous-marines animées (overlay canvas sur le sol) ────────────
-function createCausticOverlay(scene: THREE.Scene): (t: number) => void {
-  const size = 256;
+function createCausticOverlay(scene: THREE.Scene, floor: FloorSampler): (t: number) => void {
+  const size = 512;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d')!;
   const tex = new THREE.CanvasTexture(canvas);
 
-  const geo = new THREE.PlaneGeometry(TABLE.width + 1, TABLE.depth + 1);
+  const geo = new THREE.PlaneGeometry(TABLE.width + 0.5, TABLE.depth + 0.5);
   const mat = new THREE.MeshBasicMaterial({
     map: tex,
     transparent: true,
-    opacity: 0.22,
+    opacity: 0.38,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
   });
   const plane = new THREE.Mesh(geo, mat);
-  plane.rotation.x = -Math.PI / 2;
-  plane.position.y = 0.06;
+  plane.rotation.x = floor.rotX;
+  plane.position.set(0, floor.getY(0, 0) + 0.025, 0);
   scene.add(plane);
 
   let frame = 0;
   return (t: number) => {
-    if (frame++ % 3 !== 0) return;
+    if (frame++ % 2 !== 0) return;
     ctx.clearRect(0, 0, size, size);
-    for (let i = 0; i < 24; i++) {
-      const bx = size / 2 + Math.sin(t * 0.38 + i * 1.27) * size * 0.42;
-      const by = size / 2 + Math.cos(t * 0.31 + i * 0.91) * size * 0.42;
-      const br = size * 0.055 + Math.sin(t * 0.6 + i * 0.55) * size * 0.026;
-      const a  = 0.36 + Math.sin(t * 0.5 + i * 1.1) * 0.2;
+    // Reflets caustiques chauds (lumière soleil filtrée par l'eau — Bikini Bottom)
+    for (let i = 0; i < 38; i++) {
+      const bx = size / 2 + Math.sin(t * 0.34 + i * 1.27) * size * 0.45;
+      const by = size / 2 + Math.cos(t * 0.28 + i * 0.91) * size * 0.45;
+      const br = size * 0.040 + Math.sin(t * 0.55 + i * 0.62) * size * 0.022;
+      const a  = 0.30 + Math.sin(t * 0.45 + i * 1.1) * 0.18;
       const g  = ctx.createRadialGradient(bx, by, 0, bx, by, br);
-      g.addColorStop(0, `rgba(100,210,255,${a})`);
-      g.addColorStop(0.5, `rgba(40,140,230,${a * 0.4})`);
-      g.addColorStop(1, 'rgba(0,80,180,0)');
+      // Teal-doré : mélange lumière soleil + reflet eau sous-marin
+      g.addColorStop(0,   `rgba(180,240,210,${a})`);
+      g.addColorStop(0.4, `rgba(100,210,180,${a * 0.5})`);
+      g.addColorStop(1,   'rgba(40,160,140,0)');
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(bx, by, br, 0, Math.PI * 2);
@@ -232,23 +236,92 @@ function createTitlePlaque(scene: THREE.Scene): void {
 }
 
 
-// ── Dôme ciel océan (gradient surface → abysses) ──────────────────────────
-function createOceanSky(scene: THREE.Scene): void {
-  const c = document.createElement('canvas');
-  c.width = 2; c.height = 512;
-  const ctx = c.getContext('2d')!;
-  const g = ctx.createLinearGradient(0, 0, 0, 512);
-  // canvas top (v=0) → pôle nord de la sphère = direction "en haut" = surface
-  g.addColorStop(0.00, '#0099cc'); // reflet de surface, rayons de soleil
-  g.addColorStop(0.20, '#0077aa');
-  g.addColorStop(0.50, '#004488'); // milieu de l'océan
-  g.addColorStop(0.75, '#002255');
-  g.addColorStop(1.00, '#000e1e'); // abysses noirs
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 2, 512);
-  const tex = new THREE.CanvasTexture(c);
+// ── Fond sous-marin animé (rayons soleil + caustiques + abysses) ──────────
+function createOceanSky(scene: THREE.Scene): (t: number) => void {
+  const W = 512, H = 256;
+  const can = document.createElement('canvas');
+  can.width = W; can.height = H;
+  const ctx = can.getContext('2d')!;
+  const tex = new THREE.CanvasTexture(can);
   const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false });
   scene.add(new THREE.Mesh(new THREE.SphereGeometry(85, 32, 16), mat));
+
+  let frame = 0;
+  return (t: number) => {
+    if (frame++ % 3 !== 0) return;
+
+    // ── Gradient de base : surface lumineuse → abysses ─────────────────
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0.00, '#c8f0ff'); // surface — lumière blanche filtrée
+    bg.addColorStop(0.12, '#5bbde0');
+    bg.addColorStop(0.35, '#1a7ab8');
+    bg.addColorStop(0.60, '#0a4a78');
+    bg.addColorStop(0.80, '#052a50');
+    bg.addColorStop(1.00, '#010e1e'); // abysses
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── Rayons de soleil (god rays) depuis la surface ──────────────────
+    const CX = W / 2, CY = -H * 0.08; // origine légèrement au-dessus du canvas
+    const RAY_COUNT = 14;
+    for (let i = 0; i < RAY_COUNT; i++) {
+      const baseAngle = (i / RAY_COUNT) * Math.PI - Math.PI / 2;
+      const wobble    = Math.sin(t * 0.22 + i * 0.9) * 0.06
+                      + Math.sin(t * 0.11 + i * 1.7) * 0.03;
+      const angle     = baseAngle + wobble;
+      const len       = H * (0.65 + Math.sin(t * 0.18 + i * 0.55) * 0.15);
+      const halfW     = (8 + (i % 5) * 7) * (0.7 + Math.sin(t * 0.3 + i) * 0.3);
+      const alpha     = 0.04 + Math.sin(t * 0.4 + i * 1.1) * 0.025;
+
+      const ex = CX + Math.cos(angle) * len;
+      const ey = CY + Math.sin(angle) * len;
+      const px = -Math.sin(angle) * halfW;
+      const py =  Math.cos(angle) * halfW;
+
+      const rg = ctx.createLinearGradient(CX, CY, ex, ey);
+      rg.addColorStop(0,   `rgba(220, 248, 255, ${alpha * 2.2})`);
+      rg.addColorStop(0.3, `rgba(160, 220, 255, ${alpha})`);
+      rg.addColorStop(1,   'rgba(60, 160, 220, 0)');
+
+      ctx.beginPath();
+      ctx.moveTo(CX, CY);
+      ctx.lineTo(ex + px, ey + py);
+      ctx.lineTo(ex - px, ey - py);
+      ctx.closePath();
+      ctx.fillStyle = rg;
+      ctx.fill();
+    }
+
+    // ── Caustiques à la surface (halo animé) ───────────────────────────
+    for (let i = 0; i < 22; i++) {
+      const cx = W * 0.5 + Math.sin(t * 0.28 + i * 1.3) * W * 0.38;
+      const cy = Math.abs(Math.cos(t * 0.21 + i * 0.85)) * H * 0.18;
+      const cr = 18 + Math.sin(t * 0.5 + i * 0.7) * 10;
+      const ca = 0.10 + Math.sin(t * 0.4 + i * 1.05) * 0.06;
+      const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
+      cg.addColorStop(0,   `rgba(210, 248, 255, ${ca})`);
+      cg.addColorStop(0.5, `rgba(120, 210, 245, ${ca * 0.4})`);
+      cg.addColorStop(1,   'rgba(60, 160, 220, 0)');
+      ctx.fillStyle = cg;
+      ctx.beginPath();
+      ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ── Vignette latérale (plus sombre sur les côtés = profondeur) ─────
+    const vl = ctx.createLinearGradient(0, 0, W * 0.3, 0);
+    vl.addColorStop(0, 'rgba(1,10,28,0.55)');
+    vl.addColorStop(1, 'rgba(1,10,28,0)');
+    ctx.fillStyle = vl;
+    ctx.fillRect(0, 0, W * 0.3, H);
+    const vr = ctx.createLinearGradient(W, 0, W * 0.7, 0);
+    vr.addColorStop(0, 'rgba(1,10,28,0.55)');
+    vr.addColorStop(1, 'rgba(1,10,28,0)');
+    ctx.fillStyle = vr;
+    ctx.fillRect(W * 0.7, 0, W * 0.3, H);
+
+    tex.needsUpdate = true;
+  };
 }
 
 // ── Inserts lumineux dans le sol (style vrai flipper) ─────────────────────
@@ -262,21 +335,7 @@ function createInsertLights(scene: THREE.Scene, floor: FloorSampler): (t: number
     b: number;
   }[] = [];
 
-  const defs = [
-    // Bumpers principaux (cluster haut centre)
-    { x: -0.84, z: -3.94, color: 0x0099ff, r: 0.40 },
-    { x:  0.83, z: -4.18, color: 0xffdd00, r: 0.40 },
-    // Bumper isolé (haut gauche)
-    { x: -3.18, z: -6.35, color: 0xff6600, r: 0.40 },
-    // Mini-bumpers centre
-    // Scoring lanes (3 lanes alignées devant les flippers)
-    { x: -1.1, z: 5.4, color: 0xff8800, r: 0.20 },
-    { x:  -0.05, z: 4.85, color: 0xffff00, r: 0.20 },
-    { x:  0.94, z: 5.4, color: 0x44ff44, r: 0.20 },
-    // Fond de table (haut)
-    // Accents latéraux
-    { x:  2.5, z:  2.5, color: 0xffaa44, r: 0.14 },
-  ];
+  const defs: { x: number; z: number; color: number; r: number }[] = [];
 
   const c = new THREE.Color();
   for (const d of defs) {
@@ -374,54 +433,430 @@ function createBallTrail(scene: THREE.Scene): {
   };
 }
 
-// ── Dunes de sable procédurales ───────────────────────────────────────────
-function createDunes(scene: THREE.Scene, floor: FloorSampler, baseMat: THREE.MeshStandardMaterial): void {
-  const W = TABLE.width  - 0.9;
-  const D = TABLE.depth  - 0.9;
-  const SEG_X = 56;
-  const SEG_Z = 96;
+// ── Flaques d'eau animées (fond marin Bikini Bottom) ─────────────────────
+function createWaterPuddles(scene: THREE.Scene, floor: FloorSampler): (t: number) => void {
+  // Positions le long des parois et zones naturelles du playfield
+  const spots = [
+    { x: 0.5, z: 1.4, rx: 0.75, rz: 0.50, seed: 1.3 },
+    { x:  1.5, z: -3.0, rx: 0.60, rz: 0.44, seed: 2.7 },
+    { x: -2.8, z:  3.8, rx: 0.62, rz: 0.46, seed: 0.8 },
+    { x:  0.0, z: -0.5, rx: 0.68, rz: 0.50, seed: 4.1 },
+    { x: -2.0, z: -3.5, rx: 0.48, rz: 0.38, seed: 3.5 },
+  ];
 
-  const geo = new THREE.PlaneGeometry(W, D, SEG_X, SEG_Z);
-  const pos = geo.attributes['position'] as THREE.BufferAttribute;
+  const SZ = 256;
+  const ticks: ((t: number) => void)[] = [];
 
-  for (let i = 0; i < pos.count; i++) {
-    const lx = pos.getX(i) ?? 0;
-    const ly = pos.getY(i) ?? 0;
-    // Après rotation.x = floor.rotX, localY ≈ -worldZ et localZ pointe vers le haut
-    const wx = lx;
-    const wz = -ly;
+  for (const sp of spots) {
+    // ── Forme irrégulière organique (polygone perturbé, pas un cercle parfait) ──
+    const N    = 28;
+    const vArr: number[] = [0, 0, 0];
+    const uvArr: number[] = [0.5, 0.5];
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2;
+      const r = 1.0
+        + 0.20 * Math.sin(a * 2.3 + sp.seed)
+        + 0.13 * Math.sin(a * 4.7 + sp.seed * 1.8)
+        + 0.07 * Math.cos(a * 7.1 + sp.seed * 0.6);
+      const vx = Math.cos(a) * sp.rx * r;
+      const vy = Math.sin(a) * sp.rz * r;
+      vArr.push(vx, vy, 0);
+      uvArr.push(vx / (sp.rx * 1.5) * 0.5 + 0.5, vy / (sp.rz * 1.5) * 0.5 + 0.5);
+    }
+    const idxArr: number[] = [];
+    for (let i = 0; i < N; i++) idxArr.push(0, i + 1, (i + 1) % N + 1);
 
-    // Fondu au bord — pas de dunes contre les murs
-    const fadeX = Math.max(0, Math.min(1, (W / 2 - Math.abs(wx)) / 0.9));
-    const fadeZ = Math.max(0, Math.min(1, (D / 2 - Math.abs(wz)) / 1.4));
-    const fade  = fadeX * fadeZ;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(vArr,  3));
+    geo.setAttribute('uv',       new THREE.Float32BufferAttribute(uvArr, 2));
+    geo.setIndex(idxArr);
+    geo.computeVertexNormals();
 
-    // Superposition de sinusoïdes → relief de dunes naturelles
-    const dune =
-      0.13 * Math.sin(wx * 0.82 + 0.31) * Math.cos(wz * 0.53 + 0.74) +
-      0.08 * Math.sin(wx * 1.65 + wz * 0.68 + 1.20) +
-      0.06 * Math.cos(wx * 0.47 + wz * 1.18 + 0.55) +
-      0.04 * Math.sin(wx * 2.40 + wz * 1.45 + 1.90) +
-      0.03 * Math.cos(wx * 0.30 + wz * 0.35 + 3.10);
+    // Canvas texture animée
+    const can = document.createElement('canvas');
+    can.width = can.height = SZ;
+    const ctx = can.getContext('2d')!;
+    const tex = new THREE.CanvasTexture(can);
 
-    // Seule la partie positive forme des dunes (pas de trous)
-    pos.setZ(i, Math.max(0, dune) * fade);
+    const mat = new THREE.MeshStandardMaterial({
+      map: tex,
+      transparent: true,
+      opacity: 0.82,
+      metalness: 0.92,   // très réfléchissant — effet miroir d'eau
+      roughness: 0.03,   // surface quasi-lisse
+      depthWrite: false,
+      envMapIntensity: 5.0,
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = floor.rotX;
+    mesh.position.set(sp.x, floor.getY(sp.x, sp.z) + 0.016, sp.z);
+    scene.add(mesh);
+
+    const ph = sp.seed * 1.57;
+
+    ticks.push((t: number) => {
+      ctx.clearRect(0, 0, SZ, SZ);
+      const cx = SZ / 2, cy = SZ / 2, R = SZ / 2;
+
+      // ── Fond eau sombre — visible au travers comme une vraie flaque ──────
+      const bg = ctx.createRadialGradient(cx, cy, SZ * 0.04, cx, cy, R);
+      bg.addColorStop(0,    'rgba(10, 55, 120, 0.95)');
+      bg.addColorStop(0.45, 'rgba( 8, 45, 105, 0.85)');
+      bg.addColorStop(0.80, 'rgba( 5, 32,  90, 0.48)');
+      bg.addColorStop(1,    'rgba( 2, 20,  72, 0)');
+      ctx.fillStyle = bg;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ── Caustiques sous-marines (lumière filtrée — pas des ronds cartoon) ──
+      for (let i = 0; i < 6; i++) {
+        const a1 = t * 0.17 + ph + i * 1.047;
+        const a2 = t * 0.12 + ph + i * 0.873;
+        const px = cx + Math.sin(a1) * R * 0.38;
+        const py = cy + Math.cos(a2) * R * 0.32;
+        const pr = R * (0.10 + 0.05 * Math.sin(t * 0.35 + i * 0.9));
+        const pa = 0.28 + 0.14 * Math.sin(t * 0.28 + i * 0.65);
+        const cg = ctx.createRadialGradient(px, py, 0, px, py, pr);
+        cg.addColorStop(0,   `rgba(190, 238, 255, ${pa})`);
+        cg.addColorStop(0.5, `rgba(110, 195, 240, ${pa * 0.45})`);
+        cg.addColorStop(1,   'rgba(60, 155, 220, 0)');
+        ctx.fillStyle = cg;
+        ctx.beginPath();
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // ── Reflet spéculaire principal (lumière du soleil sous-marin) ────────
+      const hx = cx - R * 0.22, hy = cy - R * 0.26;
+      const hl = ctx.createRadialGradient(hx, hy, 0, hx, hy, R * 0.30);
+      hl.addColorStop(0,   'rgba(255, 255, 255, 0.62)');
+      hl.addColorStop(0.25,'rgba(240, 252, 255, 0.32)');
+      hl.addColorStop(0.7, 'rgba(210, 242, 255, 0.10)');
+      hl.addColorStop(1,   'rgba(190, 232, 255, 0)');
+      ctx.fillStyle = hl;
+      ctx.beginPath();
+      ctx.arc(hx, hy, R * 0.30, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ── Petit reflet secondaire (scintillement) ────────────────────────
+      const sx = cx + R * 0.18 + Math.sin(t * 1.1 + ph) * R * 0.06;
+      const sy = cy + R * 0.22 + Math.cos(t * 0.9 + ph) * R * 0.05;
+      ctx.beginPath();
+      ctx.arc(sx, sy, R * 0.06, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+      ctx.fill();
+
+      tex.needsUpdate = true;
+    });
   }
 
-  pos.needsUpdate = true;
-  geo.computeVertexNormals();
+  let frame = 0;
+  return (t: number) => {
+    if (frame++ % 2 !== 0) return;
+    for (const tick of ticks) tick(t);
+  };
+}
 
-  const mat = baseMat.clone();
-  // Renforce le relief de texture sur les dunes
-  mat.bumpScale = 2.5;
-  mat.polygonOffset = true;
-  mat.polygonOffsetFactor = -1;
-  mat.polygonOffsetUnits = -1;
+// ── Texture éponge procédurale (SpongeBob) ────────────────────────────────
+function createSpongeMaterial(): THREE.MeshStandardMaterial {
+  const SIZE = 512;
+  const rng  = (seed: number) => { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; }; };
+  const rand = rng(42);
 
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.rotation.x = floor.rotX;
-  mesh.position.set(0, floor.getY(0, 0) + 0.005, 0);
-  scene.add(mesh);
+  // Génère N pores aléatoires (position, rayon, aplatissement, angle)
+  const PORES = 140;
+  const pores: { x: number; y: number; r: number; ry: number; a: number }[] = [];
+  for (let i = 0; i < PORES; i++) {
+    pores.push({
+      x:  rand() * SIZE,
+      y:  rand() * SIZE,
+      r:  5  + rand() * 18,
+      ry: 0.55 + rand() * 0.7,
+      a:  rand() * Math.PI,
+    });
+  }
+
+  // ── Canvas diffuse : jaune SpongeBob + pores sombres ────────────────────
+  const dc  = document.createElement('canvas');
+  dc.width  = dc.height = SIZE;
+  const dctx = dc.getContext('2d')!;
+
+  // Fond jaune avec légère variation sinusoïdale de chaleur
+  const imgD = dctx.createImageData(SIZE, SIZE);
+  for (let py = 0; py < SIZE; py++) {
+    for (let px = 0; px < SIZE; px++) {
+      const n = 0.5
+        + 0.12 * Math.sin(px * 0.045 + py * 0.03 + 1.2)
+        + 0.07 * Math.cos(px * 0.08  - py * 0.06 + 2.5);
+      const idx = (py * SIZE + px) * 4;
+      imgD.data[idx]     = Math.round(248 + n * 7);   // R
+      imgD.data[idx + 1] = Math.round(208 + n * 15);  // G
+      imgD.data[idx + 2] = Math.round(30  + n * 20);  // B
+      imgD.data[idx + 3] = 255;
+    }
+  }
+  dctx.putImageData(imgD, 0, 0);
+
+  // Dessin des pores (cavités)
+  for (const p of pores) {
+    dctx.save();
+    dctx.translate(p.x, p.y);
+    dctx.rotate(p.a);
+    dctx.scale(1, p.ry);
+    dctx.translate(-p.x, -p.y);
+    const g = dctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+    g.addColorStop(0,    'rgba(38, 16, 2, 0.98)');
+    g.addColorStop(0.45, 'rgba(70, 30, 5, 0.85)');
+    g.addColorStop(0.75, 'rgba(130, 75, 10, 0.55)');
+    g.addColorStop(0.90, 'rgba(200, 150, 30, 0.22)');
+    g.addColorStop(1,    'rgba(255, 220, 50, 0)');
+    dctx.fillStyle = g;
+    dctx.beginPath();
+    dctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    dctx.fill();
+    dctx.restore();
+  }
+  const diffTex = new THREE.CanvasTexture(dc);
+  diffTex.wrapS = diffTex.wrapT = THREE.RepeatWrapping;
+  diffTex.colorSpace = THREE.SRGBColorSpace;
+
+  // ── Canvas bump : noir dans les pores, blanc sur les rebords ────────────
+  const bc  = document.createElement('canvas');
+  bc.width  = bc.height = SIZE;
+  const bctx = bc.getContext('2d')!;
+
+  // Base grise neutre + légère rugosité de surface
+  const imgB = bctx.createImageData(SIZE, SIZE);
+  for (let py = 0; py < SIZE; py++) {
+    for (let px = 0; px < SIZE; px++) {
+      const n = 128 + 18 * Math.sin(px * 0.09 + py * 0.07)
+                    + 10 * Math.cos(px * 0.18 - py * 0.13 + 1.4);
+      const idx = (py * SIZE + px) * 4;
+      imgB.data[idx] = imgB.data[idx + 1] = imgB.data[idx + 2] = Math.round(n);
+      imgB.data[idx + 3] = 255;
+    }
+  }
+  bctx.putImageData(imgB, 0, 0);
+
+  // Pores : rebord blanc (surélevé) + centre noir (creux)
+  for (const p of pores) {
+    bctx.save();
+    bctx.translate(p.x, p.y);
+    bctx.rotate(p.a);
+    bctx.scale(1, p.ry);
+    bctx.translate(-p.x, -p.y);
+    // Rebord surélevé
+    const rim = bctx.createRadialGradient(p.x, p.y, p.r * 0.6, p.x, p.y, p.r * 1.3);
+    rim.addColorStop(0,   'rgba(255,255,255,0)');
+    rim.addColorStop(0.5, 'rgba(255,255,255,0.65)');
+    rim.addColorStop(1,   'rgba(255,255,255,0)');
+    bctx.fillStyle = rim;
+    bctx.beginPath();
+    bctx.arc(p.x, p.y, p.r * 1.3, 0, Math.PI * 2);
+    bctx.fill();
+    // Cavité (noir)
+    const hole = bctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 0.85);
+    hole.addColorStop(0,   'rgba(0,0,0,0.98)');
+    hole.addColorStop(0.6, 'rgba(0,0,0,0.80)');
+    hole.addColorStop(1,   'rgba(0,0,0,0)');
+    bctx.fillStyle = hole;
+    bctx.beginPath();
+    bctx.arc(p.x, p.y, p.r * 0.85, 0, Math.PI * 2);
+    bctx.fill();
+    bctx.restore();
+  }
+  const bumpTex = new THREE.CanvasTexture(bc);
+  bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping;
+
+  return new THREE.MeshStandardMaterial({
+    map:      diffTex,
+    bumpMap:  bumpTex,
+    bumpScale: 4.0,
+    color:    new THREE.Color(0xffe040),
+    roughness: 0.78,
+    metalness: 0.0,
+    envMapIntensity: 0.9,
+    side: THREE.DoubleSide,
+  });
+}
+
+// ── Singleshots corail lumineux (formes triangulaires près des flippers) ──
+function createCoralSingleshots(root: THREE.Object3D): (t: number) => void {
+  const KEYWORDS      = ['singleshot', 'sling', 'guide', 'inlane', 'outlane', 'kicker'];
+  const CORAL_NAMES   = new Set([
+    'col_ref_plunger_003', 'col_ref_plunger_004', 'col_ref_plunger_006', 'col_ref_plunger_007', 'col_ref_plunger_009',
+    'col_ref_flipper_014', 'col_ref_flipper_030',
+  ]);
+  const SPONGE_NAMES  = new Set<string>();
+
+  const coralMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0xff5522),
+    roughness: 0.18,
+    metalness: 0.30,
+    emissive: new THREE.Color(0xff2200),
+    emissiveIntensity: 0.5,
+    envMapIntensity: 1.6,
+  });
+
+  const spongeMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0xffe135),
+    roughness: 0.20,
+    metalness: 0.25,
+    emissive: new THREE.Color(0xffaa00),
+    emissiveIntensity: 0.45,
+    envMapIntensity: 1.6,
+  });
+
+root.traverse((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return;
+    const n = obj.name.toLowerCase();
+    if (SPONGE_NAMES.has(obj.name)) {
+      obj.material = spongeMat;
+    } else if (CORAL_NAMES.has(obj.name) || KEYWORDS.some((k) => n.includes(k))) {
+      obj.material = coralMat;
+    }
+  });
+
+  return (t: number) => {
+    const pulse = 0.28 + Math.sin(t * 1.6) * 0.22 + Math.sin(t * 2.9 + 1.2) * 0.08;
+    coralMat.emissiveIntensity = pulse;
+    spongeMat.emissiveIntensity = 0.30 + Math.sin(t * 1.4 + 0.8) * 0.20 + Math.sin(t * 2.5) * 0.07;
+  };
+}
+
+// ── Animation rides de sable (courant sous-marin) ─────────────────────────
+function createSandRipples(
+  scene: THREE.Scene,
+  floor: FloorSampler,
+  sandNorm: THREE.Texture,
+): (t: number) => void {
+  const SZ  = 512;
+  const can = document.createElement('canvas');
+  can.width = can.height = SZ;
+  const ctx = can.getContext('2d')!;
+  const tex = new THREE.CanvasTexture(can);
+
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex,
+    transparent: true,
+    opacity: 0.38,
+    depthWrite: false,
+    blending: THREE.NormalBlending,
+  });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(TABLE.width - 0.5, TABLE.depth - 0.5), mat);
+  plane.rotation.x = floor.rotX;
+  plane.position.set(0, floor.getY(0, 0) + 0.02, 0);
+  scene.add(plane);
+
+  let frame = 0;
+  return (t: number) => {
+    // Dérive de la normal map — courant sous-marin visible
+    sandNorm.offset.x = Math.sin(t * 0.06) * 0.08;
+    sandNorm.offset.y = (t * 0.012) % 1;
+
+    if (frame++ % 2 !== 0) return;
+    ctx.clearRect(0, 0, SZ, SZ);
+
+    const BANDS = 28;
+    for (let b = 0; b < BANDS; b++) {
+      const phase  = ((b / BANDS) + t * 0.04) % 1;
+      const yBase  = phase * SZ;
+      const freq   = 2.0 + (b % 5) * 0.9;
+      const amp    = 10  + (b % 6) * 4;
+      const spd    = 0.12 + (b % 4) * 0.06;
+      const alpha  = 0.16 + (b % 4) * 0.07;
+      const width  = 1.0  + (b % 3) * 0.6;
+
+      ctx.beginPath();
+      for (let x = 0; x <= SZ; x += 2) {
+        const y = yBase + Math.sin((x / SZ) * Math.PI * 2 * freq + t * spd + b * 1.3) * amp
+                        + Math.sin((x / SZ) * Math.PI * 2 * freq * 0.53 + t * spd * 0.7) * amp * 0.45;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(130, 100, 55, ${alpha})`;
+      ctx.lineWidth = width;
+      ctx.stroke();
+    }
+    tex.needsUpdate = true;
+  };
+}
+
+// ── Détail sable multi-couche (grain fin + variation couleur) ─────────────
+function createSandDetail(scene: THREE.Scene, floor: FloorSampler, sandDiff: THREE.Texture): void {
+  const W  = TABLE.width  - 0.6;
+  const D  = TABLE.depth  - 0.6;
+  const Y0 = floor.getY(0, 0);
+  const RX = floor.rotX;
+
+  // ── Couche 1 : grain fin (même texture, répétition ×4) ───────────────────
+  const fineTex = sandDiff.clone();
+  fineTex.wrapS = fineTex.wrapT = THREE.RepeatWrapping;
+  fineTex.repeat.set(20, 33);
+  fineTex.needsUpdate = true;
+
+  const fineMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(W, D),
+    new THREE.MeshBasicMaterial({
+      map: fineTex,
+      transparent: true,
+      opacity: 0.40,
+      blending: THREE.MultiplyBlending,
+      premultipliedAlpha: true,
+      depthWrite: false,
+    }),
+  );
+  fineMesh.rotation.x = RX;
+  fineMesh.position.set(0, Y0 + 0.008, 0);
+  scene.add(fineMesh);
+
+  // ── Couche 2 : variation naturelle par bruit sinusoïdal (pas de patches) ──
+  const SZ = 256;
+  const can = document.createElement('canvas');
+  can.width = can.height = SZ;
+  const ctx = can.getContext('2d')!;
+  const img = ctx.createImageData(SZ, SZ);
+
+  for (let py = 0; py < SZ; py++) {
+    for (let px = 0; px < SZ; px++) {
+      // Espace table (coordonnées normalisées → monde)
+      const nx = (px / SZ) * 4.5;
+      const nz = (py / SZ) * 7.0;
+
+      // 4 octaves, résultat dans ~[0.05, 0.95]
+      const n = 0.50
+        + 0.22 * Math.sin(nx * 0.68 + nz * 0.42 + 1.10)
+        + 0.14 * Math.sin(nx * 1.55 + nz * 1.08 + 2.45)
+        + 0.08 * Math.cos(nx * 2.90 + nz * 0.75 + 0.65)
+        + 0.05 * Math.sin(nx * 0.32 + nz * 2.10 + 3.20);
+
+      const v = Math.max(0, Math.min(1, n));
+
+      // Tons sable chaud doré : R fort, G moyen, B bas
+      const idx = (py * SZ + px) * 4;
+      img.data[idx]     = Math.round(242 + v * 13); // R: 242-255 blanc crème
+      img.data[idx + 1] = Math.round(232 + v * 14); // G: 232-246 très clair
+      img.data[idx + 2] = Math.round(200 + v * 20); // B: 200-220 légèrement chaud
+      img.data[idx + 3] = 210;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  const varMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(W, D),
+    new THREE.MeshBasicMaterial({
+      map: new THREE.CanvasTexture(can),
+      transparent: true,
+      opacity: 0.42,
+      blending: THREE.MultiplyBlending,
+      premultipliedAlpha: true,
+      depthWrite: false,
+    }),
+  );
+  varMesh.rotation.x = RX;
+  varMesh.position.set(0, Y0 + 0.012, 0);
+  scene.add(varMesh);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -429,24 +864,25 @@ function createDunes(scene: THREE.Scene, floor: FloorSampler, baseMat: THREE.Mes
 // ─────────────────────────────────────────────────────────────────────────────
 export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x003d6f); // fallback si la sphère est hors champ
-  scene.fog = new THREE.FogExp2(0x003d6f, 0.004);
+  scene.background = new THREE.Color(0x1a7ab8);
+  scene.fog = new THREE.FogExp2(0x1a6a9a, 0.005);
 
   const camera = new THREE.PerspectiveCamera(55, RENDER_WIDTH / RENDER_HEIGHT, 0.1, 1000);
-  camera.position.set(0, 16, 20);
+  camera.position.set(0, 32, 36);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(1);
   renderer.setSize(RENDER_WIDTH, RENDER_HEIGHT, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.LinearToneMapping;
-  renderer.toneMappingExposure = 1.0;
-  renderer.shadowMap.enabled = false;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.45;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment()).texture;
-  scene.environmentIntensity = 0.45;
+  scene.environmentIntensity = 0.55;
   pmrem.dispose();
 
   const controls = new OrbitControls(camera, canvas);
@@ -461,57 +897,86 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   controls.target.set(0, 0, 0);
   controls.update();
 
-  // Ambiance océan profond
-  scene.add(new THREE.AmbientLight(0x5599cc, 2.0));
+  // ── Ambient : lumière diffuse de l'eau — assez clair pour voir partout mais
+  //    suffisamment faible pour que le soleil crée de vraies ombres
+  // HemisphereLight : ciel bleu chaud en haut, sable clair en rebond en bas
+  scene.add(new THREE.HemisphereLight(0x88ccff, 0xf0e8c0, 1.8));
+  scene.add(new THREE.AmbientLight(0xdd7744, 1.2));
 
-  // Lumière principale top-down
-  const keyLight = new THREE.DirectionalLight(0xfff5dd, 1.8);
-  keyLight.position.set(2, 20, 4);
+  // ── Soleil principal : rayon de soleil tropical filtré par l'eau, très chaud
+  const keyLight = new THREE.DirectionalLight(0xffcc66, 11.0);
+  keyLight.position.set(6, 28, -8);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.width  = 2048;
+  keyLight.shadow.mapSize.height = 2048;
+  keyLight.shadow.camera.near   = 1;
+  keyLight.shadow.camera.far    = 90;
+  keyLight.shadow.camera.left   = -13;
+  keyLight.shadow.camera.right  =  13;
+  keyLight.shadow.camera.top    =  20;
+  keyLight.shadow.camera.bottom = -20;
+  keyLight.shadow.bias          = -0.0003;
+  keyLight.shadow.normalBias    =  0.02;
+  keyLight.shadow.radius        =  4;
   scene.add(keyLight);
 
-  // Lumière rasante légère pour révéler le sable et les murs latéraux
-  const sideLight = new THREE.DirectionalLight(0xffddaa, 1.4);
-  sideLight.position.set(18, 2, 0);
-  scene.add(sideLight);
+  // ── Second soleil décalé : donne un halo chaud sur l'autre côté
+  const sunB = new THREE.DirectionalLight(0xffaa44, 4.0);
+  sunB.position.set(-8, 18, 6);
+  scene.add(sunB);
 
-  // ── Texture sable ─────────────────────────────────────────────────
+  // ── Fill : lumière froide diffuse de l'eau (contre-balance la chaleur)
+  const fillLight = new THREE.DirectionalLight(0x33aaff, 2.8);
+  fillLight.position.set(-10, 8, 16);
+  scene.add(fillLight);
+
+  // ── Rim : séparation des objets du fond, teal vif
+  const rimLight = new THREE.DirectionalLight(0x00ddcc, 2.0);
+  rimLight.position.set(-2, 14, -20);
+  scene.add(rimLight);
+
+  // ── Lumière rasante basse : révèle le grain du sable
+  const graze = new THREE.DirectionalLight(0xffe8aa, 3.0);
+  graze.position.set(18, 0.5, 3);
+  scene.add(graze);
+
+  // ── Texture sable Ground054 ────────────────────────────────────────
   const sandTexLoader = new THREE.TextureLoader();
+  const g054base = '/Ground054_2K-JPG/Ground054_2K-JPG_';
 
-  const sandDiff = sandTexLoader.load('/sand_03_2k/textures/sand_03_diff_2k.jpg');
+  const sandDiff = sandTexLoader.load(`${g054base}Color.jpg`);
   sandDiff.wrapS = sandDiff.wrapT = THREE.RepeatWrapping;
-  sandDiff.repeat.set(3, 5);
+  sandDiff.repeat.set(5, 9);
   sandDiff.colorSpace = THREE.SRGBColorSpace;
 
-  const sandArm = sandTexLoader.load('/sand_03_2k/textures/sand_03_arm_2k.jpg');
-  sandArm.wrapS = sandArm.wrapT = THREE.RepeatWrapping;
-  sandArm.repeat.set(3, 5);
+  const sandRough = sandTexLoader.load(`${g054base}Roughness.jpg`);
+  sandRough.wrapS = sandRough.wrapT = THREE.RepeatWrapping;
+  sandRough.repeat.set(5, 9);
 
-  const sandBump = sandTexLoader.load('/sand_03_2k/textures/sand_03_disp_2k.png');
+  const sandAO = sandTexLoader.load(`${g054base}AmbientOcclusion.jpg`);
+  sandAO.wrapS = sandAO.wrapT = THREE.RepeatWrapping;
+  sandAO.repeat.set(5, 9);
+
+  const sandBump = sandTexLoader.load(`${g054base}Displacement.jpg`);
   sandBump.wrapS = sandBump.wrapT = THREE.RepeatWrapping;
-  sandBump.repeat.set(3, 5);
+  sandBump.repeat.set(5, 9);
 
-  // Sable sur la géométrie GLB.
-  // DoubleSide = visible depuis le dessous aussi quand on fait pivoter la caméra.
-  // bumpScale élevé + lumières rasantes très basses = relief prononcé vu de dessus.
+  const sandNorm = sandTexLoader.load(`${g054base}NormalGL.jpg`);
+  sandNorm.wrapS = sandNorm.wrapT = THREE.RepeatWrapping;
+  sandNorm.repeat.set(5, 9);
+
   const sandMat = new THREE.MeshStandardMaterial({
-    map: sandDiff,
-    roughnessMap: sandArm,
-    aoMap: sandArm,
-    aoMapIntensity: 0.8,
-    bumpMap: sandBump,
-    bumpScale: 1.5,
-    roughness: 0.96,
-    metalness: 0.0,
-    side: THREE.DoubleSide,
-  });
-
-  new EXRLoader().load('/sand_03_2k/textures/sand_03_nor_gl_2k.exr', (normalTex) => {
-    normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
-    normalTex.repeat.set(3, 5);
-    sandMat.normalMap = normalTex;
-    sandMat.normalScale.set(2.8, 2.8);
-    sandMat.bumpMap = null;
-    sandMat.needsUpdate = true;
+    map:           sandDiff,
+    normalMap:     sandNorm,
+    normalScale:   new THREE.Vector2(12.0, 12.0),
+    roughnessMap:  sandRough,
+    aoMap:         sandAO,
+    aoMapIntensity: 1.8,
+    bumpMap:       sandBump,
+    bumpScale:     10.0,
+    roughness:     0.94,
+    metalness:     0.0,
+    side:          THREE.DoubleSide,
   });
 
   // ── Texture mur (rough block wall) ────────────────────────────────
@@ -539,6 +1004,89 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     roughness: 0.85,
     metalness: 0.02,
     color: new THREE.Color(0x1a4d7a), // bleu océan profond — clairement distinct du sable
+  });
+
+  // ── Texture herbe sous-marine (grass) ─────────────────────────────
+  const grassTexLoader = new THREE.TextureLoader();
+  const grassBase = '/Grass002_2K-JPG/Grass002_2K-JPG_';
+
+  const grassDiff = grassTexLoader.load(`${grassBase}Color.jpg`);
+  grassDiff.wrapS = grassDiff.wrapT = THREE.RepeatWrapping;
+  grassDiff.colorSpace = THREE.SRGBColorSpace;
+
+  const grassRough = grassTexLoader.load(`${grassBase}Roughness.jpg`);
+  grassRough.wrapS = grassRough.wrapT = THREE.RepeatWrapping;
+
+  const grassNorm = grassTexLoader.load(`${grassBase}NormalGL.jpg`);
+  grassNorm.wrapS = grassNorm.wrapT = THREE.RepeatWrapping;
+
+  const grassAO = grassTexLoader.load(`${grassBase}AmbientOcclusion.jpg`);
+  grassAO.wrapS = grassAO.wrapT = THREE.RepeatWrapping;
+
+  const grassBump = grassTexLoader.load(`${grassBase}Displacement.jpg`);
+  grassBump.wrapS = grassBump.wrapT = THREE.RepeatWrapping;
+
+  const grassMat = new THREE.MeshStandardMaterial({
+    map: grassDiff,
+    color: new THREE.Color(0x2d5a1e), // vert foncé
+    roughnessMap: grassRough,
+    normalMap: grassNorm,
+    normalScale: new THREE.Vector2(6.0, 6.0),
+    aoMap: grassAO,
+    aoMapIntensity: 1.6,
+    bumpMap: grassBump,
+    bumpScale: 5.5,
+    roughness: 0.88,
+    metalness: 0.0,
+  });
+
+  const GRASS_NAMES  = new Set(['col_wall_center']);
+  const CLOUDS_NAMES = new Set(['col_ref_floor_main', 'col_wall_left_fill', 'col_wall_main_outer']);
+
+  const cloudsTex = new THREE.TextureLoader().load('/Floral Background _Aquarium _ Terrarium Background.jpg');
+  cloudsTex.wrapS = cloudsTex.wrapT = THREE.RepeatWrapping;
+  cloudsTex.colorSpace = THREE.SRGBColorSpace;
+
+  const cloudsMat = new THREE.MeshStandardMaterial({
+    map: cloudsTex,
+    color: new THREE.Color(0x555555),
+    roughness: 0.75,
+    metalness: 0.0,
+  });
+
+  const logoTex = new THREE.TextureLoader().load('/flipper12logo.png');
+  logoTex.colorSpace = THREE.SRGBColorSpace;
+  const logoMat = new THREE.MeshStandardMaterial({
+    map:              logoTex,
+    color:            new THREE.Color(0x666666),
+    transparent:      true,
+    alphaTest:        0.05,
+    roughness:        0.60,
+    metalness:        0.10,
+    emissiveIntensity: 0.0,
+    depthWrite:       false,
+    side:             THREE.DoubleSide,
+  });
+  const spongeMat    = createSpongeMaterial();
+  const SPONGE_MESH_NAMES = new Set(['col_ramp_main']);
+  const CONCRETE_MESH_NAMES = new Set(['col_wall_frame_black', 'col_wall_panel', 'col_wall_shooter']);
+
+  const concreteTex = new THREE.TextureLoader().load('/photo-concrete-texture-pattern.jpg');
+  concreteTex.wrapS = concreteTex.wrapT = THREE.RepeatWrapping;
+  concreteTex.colorSpace = THREE.SRGBColorSpace;
+
+  const concreteMat = new THREE.MeshStandardMaterial({
+    map: concreteTex,
+    color: new THREE.Color(0x777777),
+    roughness: 0.85,
+    metalness: 0.0,
+  });
+
+  const concreteFrameMat = new THREE.MeshStandardMaterial({
+    map: concreteTex,
+    color: new THREE.Color(0x777777),
+    roughness: 0.85,
+    metalness: 0.0,
   });
 
   let meshReadyCb:  ((meshes: PinballMeshes) => void) | null = null;
@@ -603,9 +1151,6 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
 
 
     // ── Matériau nacré Bikini Bottom — toboggan, bumpers et obstacles ─────────
-    // MeshPhysicalMaterial : iridescence arc-en-ciel + légère transmission (effet
-    // coquillage / bulle de savon sous-marin). Spectaculaire vu d'en haut car
-    // les reflets irisés changent avec l'angle de caméra et les lumières rasantes.
     const pearlMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0x66ddff),
       roughness: 0.08,
@@ -617,16 +1162,62 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
 
     // ── Flippers jaune doré SpongeBob ─────────────────────────────────────────
     const flipperMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0xffcc00),
-      roughness: 0.10,
-      metalness: 0.80,
-      emissive: new THREE.Color(0xff8800),
-      emissiveIntensity: 0.20,
+      color: new THREE.Color(0x0f0a01),
+      roughness: 0.55,
+      metalness: 0.10,
     });
 
     root.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
       if (obj.name === 'col_floor_playfield_blue') return;
+
+      if (SPONGE_MESH_NAMES.has(obj.name)) {
+        obj.material = spongeMat;
+        return;
+      }
+
+      if (obj.name === 'col_wall_frame_black') {
+        obj.material = concreteFrameMat;
+        return;
+      }
+
+      if (obj.name === 'col_ref_plunger_star') {
+        obj.material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(0xff66cc),
+          emissive: new THREE.Color(0xff44bb),
+          emissiveIntensity: 0.35,
+          roughness: 0.3,
+          metalness: 0.4,
+        });
+        return;
+      }
+
+      if (obj.name === 'col_floor_detail') {
+        obj.material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(0xcc4499),
+          emissive: new THREE.Color(0x992277),
+          emissiveIntensity: 0.25,
+          roughness: 0.3,
+          metalness: 0.4,
+        });
+        return;
+      }
+
+      if (CONCRETE_MESH_NAMES.has(obj.name)) {
+        obj.material = concreteMat;
+        return;
+      }
+
+      if (GRASS_NAMES.has(obj.name)) {
+        obj.material = grassMat;
+        return;
+      }
+
+      if (CLOUDS_NAMES.has(obj.name)) {
+        obj.material = cloudsMat;
+        return;
+      }
+
 
       if (obj.name.toLowerCase().includes('wall') || obj.name.toLowerCase().includes('frame')) {
         obj.material = wallMat;
@@ -639,6 +1230,146 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
       }
 
       obj.material = pearlMat;
+    });
+
+    // Force le matériau sur tous les meshes enfants des flippers (ils peuvent être des Groups)
+    for (const name of ['flipper_left', 'flipper_right']) {
+      const fObj = root.getObjectByName(name);
+      if (fObj) fObj.traverse((child) => {
+        if (child instanceof THREE.Mesh) child.material = flipperMat;
+      });
+    }
+
+    // ── Reprojection UV planaire (espace monde) pour grass + sponge ────────
+    root.updateWorldMatrix(true, true);
+    const GRASS_FREQ = 0.55; // 1 carreau ≈ 1.8 unités monde
+    for (const meshName of [...GRASS_NAMES, ...SPONGE_MESH_NAMES]) {
+      const gobj = root.getObjectByName(meshName);
+      if (!(gobj instanceof THREE.Mesh)) continue;
+      const posAttr = gobj.geometry.attributes['position'] as THREE.BufferAttribute;
+      const cnt  = posAttr.count;
+      const uvA  = new Float32Array(cnt * 2);
+      const wm   = gobj.matrixWorld;
+      const vv   = new THREE.Vector3();
+      const bb   = new THREE.Box3().setFromObject(gobj);
+      const sz   = bb.getSize(new THREE.Vector3());
+      const isFloor = sz.y < sz.x * 0.4 && sz.y < sz.z * 0.4;
+      for (let i = 0; i < cnt; i++) {
+        vv.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
+        vv.applyMatrix4(wm);
+        if (isFloor) {
+          uvA[i * 2]     = vv.x * GRASS_FREQ;
+          uvA[i * 2 + 1] = vv.z * GRASS_FREQ;
+        } else {
+          const u = sz.x >= sz.z ? vv.x : vv.z;
+          uvA[i * 2]     = u    * GRASS_FREQ;
+          uvA[i * 2 + 1] = vv.y * GRASS_FREQ;
+        }
+      }
+      const newUV = new THREE.BufferAttribute(uvA, 2);
+      gobj.geometry.setAttribute('uv',  newUV);
+      gobj.geometry.setAttribute('uv2', newUV.clone());
+    }
+
+    // ── Reprojection UV cloudssponge : image entière étirée sur le mesh ────
+    for (const meshName of [...CLOUDS_NAMES]) {
+      const gobj = root.getObjectByName(meshName);
+      if (!(gobj instanceof THREE.Mesh)) continue;
+      const posAttr = gobj.geometry.attributes['position'] as THREE.BufferAttribute;
+      const cnt = posAttr.count;
+      const uvA = new Float32Array(cnt * 2);
+      const wm  = gobj.matrixWorld;
+      const vv  = new THREE.Vector3();
+      const bb  = new THREE.Box3().setFromObject(gobj);
+      const sz  = bb.getSize(new THREE.Vector3());
+      const isFloor = sz.y < sz.x * 0.4 && sz.y < sz.z * 0.4;
+      for (let i = 0; i < cnt; i++) {
+        vv.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
+        vv.applyMatrix4(wm);
+        const CLOUDS_SCALE = 3.0;
+        if (isFloor) {
+          uvA[i * 2]     = ((vv.x - bb.min.x) / sz.x) * CLOUDS_SCALE;
+          uvA[i * 2 + 1] = ((vv.z - bb.min.z) / sz.z) * CLOUDS_SCALE;
+        } else {
+          const u = sz.x >= sz.z ? vv.x : vv.z;
+          const uMin = sz.x >= sz.z ? bb.min.x : bb.min.z;
+          const uSz  = sz.x >= sz.z ? sz.x : sz.z;
+          uvA[i * 2]     = ((u    - uMin)    / uSz) * CLOUDS_SCALE;
+          uvA[i * 2 + 1] = ((vv.y - bb.min.y) / sz.y) * CLOUDS_SCALE;
+        }
+      }
+      const newUV = new THREE.BufferAttribute(uvA, 2);
+      gobj.geometry.setAttribute('uv',  newUV);
+      gobj.geometry.setAttribute('uv2', newUV.clone());
+    }
+
+    // ── Reprojection UV béton (col_wall_panel, col_wall_shooter) ─────
+    const CONCRETE_FREQ = 0.14;
+    for (const meshName of ['col_wall_panel', 'col_wall_shooter']) {
+      const gobj = root.getObjectByName(meshName);
+      if (!(gobj instanceof THREE.Mesh)) continue;
+      const posAttr = gobj.geometry.attributes['position'] as THREE.BufferAttribute;
+      const cnt = posAttr.count;
+      const uvA = new Float32Array(cnt * 2);
+      const wm  = gobj.matrixWorld;
+      const vv  = new THREE.Vector3();
+      const bb  = new THREE.Box3().setFromObject(gobj);
+      const sz  = bb.getSize(new THREE.Vector3());
+      const isFloor = sz.y < sz.x * 0.4 && sz.y < sz.z * 0.4;
+      for (let i = 0; i < cnt; i++) {
+        vv.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
+        vv.applyMatrix4(wm);
+        if (isFloor) {
+          uvA[i * 2]     = vv.x * CONCRETE_FREQ;
+          uvA[i * 2 + 1] = vv.z * CONCRETE_FREQ;
+        } else {
+          const u = sz.x >= sz.z ? vv.x : vv.z;
+          uvA[i * 2]     = u    * CONCRETE_FREQ;
+          uvA[i * 2 + 1] = vv.y * CONCRETE_FREQ;
+        }
+      }
+      const newUV = new THREE.BufferAttribute(uvA, 2);
+      gobj.geometry.setAttribute('uv',  newUV);
+      gobj.geometry.setAttribute('uv2', newUV.clone());
+    }
+
+    // ── Reprojection UV béton (col_wall_frame_black) ─────────────────
+    // Fréquence très basse = grandes tuiles, cohérentes sur une géométrie en cadre.
+    {
+      const FRAME_FREQ = 0.28;
+      const gobj = root.getObjectByName('col_wall_frame_black');
+      if (gobj instanceof THREE.Mesh) {
+        const posAttr = gobj.geometry.attributes['position'] as THREE.BufferAttribute;
+        const cnt = posAttr.count;
+        const uvA = new Float32Array(cnt * 2);
+        const wm  = gobj.matrixWorld;
+        const vv  = new THREE.Vector3();
+        for (let i = 0; i < cnt; i++) {
+          vv.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
+          vv.applyMatrix4(wm);
+          uvA[i * 2]     = vv.x * FRAME_FREQ;
+          uvA[i * 2 + 1] = vv.z * FRAME_FREQ;
+        }
+        const newUV = new THREE.BufferAttribute(uvA, 2);
+        gobj.geometry.setAttribute('uv',  newUV);
+        gobj.geometry.setAttribute('uv2', newUV.clone());
+      }
+    }
+
+    // Log des noms de meshes (pour identifier les singleshots)
+    const meshNames: string[] = [];
+    root.traverse((o) => { if (o instanceof THREE.Mesh) meshNames.push(o.name); });
+    console.log('[GLB meshes]', meshNames);
+
+    // Singleshots corail (après la passe principale pour surcharger pearlMat)
+    tickSingleshots = createCoralSingleshots(root);
+
+    // Ombres sur tous les meshes du modèle
+    root.traverse((obj) => {
+      if (obj instanceof THREE.Mesh) {
+        obj.castShadow    = true;
+        obj.receiveShadow = true;
+      }
     });
 
     // Debug physique
@@ -682,16 +1413,100 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
         getY: sampleFloorY,
         rotX: -Math.PI / 2 + Math.atan(Math.abs(slope)),
       };
-      tickInserts = createInsertLights(scene, floor);
-      createDunes(scene, floor, sandMat);
+      jellyfishBumpers = createJellyfishBumpers(scene, ['b2', 'b3'], floor.getY);
+      tickInserts   = createInsertLights(scene, floor);
+      tickCaustics  = createCausticOverlay(scene, floor);
+      tickPuddles   = createWaterPuddles(scene, floor);
+      tickSand      = createSandRipples(scene, floor, sandNorm);
+      createSandDetail(scene, floor, sandDiff);
+
+      // ── Maison Squidward — coin haut-droite du flipper ──────────────
+      {
+        const SQ_X = 3.5, SQ_Z = -6.0;
+        const sqLoader = new GLTFLoader();
+        sqLoader.load('/models/sponge_bob_hero_pants_squidwards_house.glb', (gltf) => {
+          const model = gltf.scene;
+          const box = new THREE.Box3().setFromObject(model);
+          const size = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scale = 1.6 / maxDim;
+          model.scale.setScalar(scale);
+          const floorY = floor.getY(SQ_X, SQ_Z);
+          model.position.set(SQ_X, floorY - box.min.y * scale, SQ_Z);
+          model.traverse((obj) => {
+            if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+              obj.material = obj.material.clone();
+              obj.material.color.multiplyScalar(0.55);
+            }
+          });
+          scene.add(model);
+        }, undefined, (err) => {
+          console.error('[squidward-house] failed to load', err);
+        });
+      }
+
+      // ── Maison SpongeBob + méduses b2/b3 au même Y ──────────────────
+      {
+        const SB_X = -3.18, SB_Z = -6.35;
+        const sbLoader = new GLTFLoader();
+        sbLoader.load('/models/sponge_bob_hero_pants_sponge_bobs_house.glb', (gltf) => {
+          const model = gltf.scene;
+          const box = new THREE.Box3().setFromObject(model);
+          const size = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scale = 1.2 / maxDim;
+          model.scale.setScalar(scale);
+          const floorY = floor.getY(SB_X, SB_Z);
+          const houseY = floorY - box.min.y * scale;
+          model.position.set(SB_X, houseY, SB_Z);
+          model.traverse((obj) => {
+            if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+              obj.material = obj.material.clone();
+              obj.material.color.multiplyScalar(0.25);
+            }
+          });
+          scene.add(model);
+
+        }, undefined, (err) => {
+          console.error('[spongebob-house] failed to load', err);
+        });
+      }
+
+      // ── Logo Flipper12 peint sur le sol dans col_wall_center ─────────
+      {
+        const wallCenter = root.getObjectByName('col_wall_center');
+        if (wallCenter instanceof THREE.Mesh) {
+          const bb  = new THREE.Box3().setFromObject(wallCenter);
+          const ctr = bb.getCenter(new THREE.Vector3());
+          const sz  = bb.getSize(new THREE.Vector3());
+          const w   = Math.max(sz.x, sz.z) * 0.45;
+          const h   = Math.min(sz.x, sz.z) * 0.45;
+
+          const logoPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(w, h),
+            logoMat,
+          );
+          logoPlane.rotation.x = floor.rotX;
+          logoPlane.position.set(ctr.x, floor.getY(ctr.x, ctr.z) + 0.03, ctr.z);
+          logoPlane.renderOrder = 1;
+          scene.add(logoPlane);
+        }
+      }
     }
   });
+
 
   // ── Décorations non liées au sol ──────────────────────────────────
   const tickBubblesLarge   = createBubbleLayer(scene, 30,  0.30, 0.45);
   const tickBubblesSmall   = createBubbleLayer(scene, 70, 0.15, 0.30);
-  let tickInserts: (t: number) => void = () => {};
-  createOceanSky(scene);
+  let tickInserts:     (t: number) => void = () => {};
+  let tickCaustics:    (t: number) => void = () => {};
+  let tickPuddles:     (t: number) => void = () => {};
+  let tickSingleshots: (t: number) => void = () => {};
+  let tickSand:        (t: number) => void = () => {};
+  let tickSky:         (t: number) => void = () => {};
+  let jellyfishBumpers: JellyfishBumpers = { hit: () => {}, tick: () => {} };
+  tickSky = createOceanSky(scene);
   const trail              = createBallTrail(scene);
 
   // ── Camera shake ──────────────────────────────────────────────────
@@ -730,10 +1545,31 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     tickBubblesLarge(t);
     tickBubblesSmall(t);
     tickInserts(t);
+    tickCaustics(t);
+    tickPuddles(t);
+    tickSingleshots(t);
+    tickSand(t);
+    tickSky(t);
     trail.tick(dt);
     applyShake(dt);
     renderer.render(scene, camera);
   }
+
+  // ── Clic pour identifier les meshes (debug temporaire) ────────────────────
+  const pickRaycaster = new THREE.Raycaster();
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = RENDER_WIDTH  / rect.width;
+    const scaleY = RENDER_HEIGHT / rect.height;
+    const ndcX =  ((e.clientX - rect.left) * scaleX / RENDER_WIDTH)  * 2 - 1;
+    const ndcY = -((e.clientY - rect.top)  * scaleY / RENDER_HEIGHT) * 2 + 1;
+    pickRaycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+    const hits = pickRaycaster.intersectObjects(scene.children, true);
+    const hit = hits.find((h) => h.object instanceof THREE.Mesh && h.object.name !== '');
+    if (hit) {
+      console.log(`[CLICK] mesh: "${hit.object.name}"`, hit.object);
+    }
+  });
 
   function resize(): void {
     // Résolution fixe — le CSS letterboxe pour s'adapter à l'écran.
@@ -753,5 +1589,6 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     updateDebugBall(pos) { debugBallCb?.(pos); },
     addBallTrail(pos) { trail.add(pos); },
     triggerShake() { shakeElapsed = 0.28; },
+    get jellyfishBumpers() { return jellyfishBumpers; },
   };
 }

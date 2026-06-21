@@ -23,7 +23,7 @@ document.body.appendChild(coordsDiv);
 
 let debugActive = false;
 
-const { scene, render, resize, onMeshesReady, toggleDebug, updateDebugBall, addBallTrail, triggerShake } =
+const { scene, render, resize, onMeshesReady, toggleDebug, updateDebugBall, addBallTrail, triggerShake, jellyfishBumpers } =
   createScene(canvas);
 const ball = createBall(scene);
 const source: GameSource = new WsGameSource({ url: WS_URL });
@@ -55,8 +55,9 @@ const orchestrator = createRendererOrchestrator(source, {
   onGameOver() {
     ball.setVisible(false);
   },
-  onBumperHit(_id) {
+  onBumperHit(id) {
     triggerShake();
+    jellyfishBumpers.hit(id);
   },
 });
 
@@ -82,6 +83,7 @@ function loop(): void {
   const now = performance.now();
   const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
   lastFrameTime = now;
+  jellyfishBumpers.tick(dt);
   render();
 }
 
