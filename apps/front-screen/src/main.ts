@@ -16,9 +16,7 @@ const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 
 const coordsDiv = document.createElement('div');
-coordsDiv.style.cssText =
-  'position:fixed;top:8px;left:8px;background:rgba(0,0,0,.75);color:#0ff;' +
-  'padding:6px 10px;font:13px monospace;border-radius:4px;display:none;z-index:999;pointer-events:none';
+coordsDiv.className = 'debug-coords';
 document.body.appendChild(coordsDiv);
 
 let debugActive = false;
