@@ -9,29 +9,54 @@ export interface StartOverlayHandle {
 
 export function createStartOverlay(onStart: () => void): StartOverlayHandle {
   const root = document.createElement('div');
-  root.className =
-    'fixed inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur z-50';
+  root.className = 'overlay-root';
+
+  // Bulles décoratives animées en fond
+  const bubbles = document.createElement('div');
+  bubbles.className = 'overlay-bubbles';
+  for (let i = 0; i < 18; i++) {
+    const b = document.createElement('div');
+    const size  = 8 + Math.random() * 30;
+    const left  = Math.random() * 100;
+    const delay = Math.random() * 6;
+    const dur   = 4 + Math.random() * 5;
+    b.className = 'overlay-bubble';
+    b.style.cssText = [
+      `bottom:-${size}px;left:${left}%;`,
+      `width:${size}px;height:${size}px;`,
+      `--dur:${dur}s;--delay:${delay}s;`,
+    ].join('');
+    bubbles.appendChild(b);
+  }
+
+  const logo = document.createElement('div');
+  logo.className = 'overlay-logo';
+  logo.textContent = '🧽';
 
   const title = document.createElement('h1');
-  title.className = 'text-white font-display text-6xl tracking-widest mb-8';
-  title.textContent = 'FLIPPER 12';
+  title.className = 'overlay-title';
+  title.textContent = 'BIKINI BOTTOM';
+
+  const subtitle = document.createElement('h2');
+  subtitle.className = 'overlay-subtitle';
+  subtitle.textContent = 'P  I  N  B  A  L  L';
 
   const button = document.createElement('button');
-  button.className =
-    'px-12 py-4 bg-neon-pink text-black font-display text-3xl tracking-widest hover:bg-white transition disabled:opacity-40 disabled:cursor-not-allowed';
-  button.textContent = 'PRESS START';
+  button.className = 'overlay-button';
+  button.textContent = '▶  PRESS START';
   button.addEventListener('click', () => {
     if (!button.disabled) onStart();
   });
 
   const hint = document.createElement('p');
-  hint.className = 'mt-4 text-white/60 font-mono text-sm';
-  hint.textContent = 'or press SPACE';
+  hint.className = 'overlay-hint';
+  hint.textContent = 'ou appuie sur ESPACE';
 
   const reasonEl = document.createElement('p');
-  reasonEl.className = 'mt-2 text-yellow-400 font-mono text-xs hidden';
+  reasonEl.className = 'overlay-reason';
 
-  root.append(title, button, hint, reasonEl);
+  root.appendChild(bubbles);
+  root.append(logo, title, subtitle, button, hint, reasonEl);
 
   const handler = (e: KeyboardEvent): void => {
     if (e.code === 'Space' && !button.disabled && root.style.display !== 'none') {
@@ -42,23 +67,17 @@ export function createStartOverlay(onStart: () => void): StartOverlayHandle {
   document.addEventListener('keydown', handler);
 
   return {
-    show(): void {
-      root.style.display = 'flex';
-    },
-    hide(): void {
-      root.style.display = 'none';
-    },
-    isVisible(): boolean {
-      return root.style.display !== 'none';
-    },
+    show(): void  { root.style.display = 'flex'; },
+    hide(): void  { root.style.display = 'none'; },
+    isVisible(): boolean { return root.style.display !== 'none'; },
     setEnabled(enabled: boolean, reason?: string): void {
       button.disabled = !enabled;
       if (enabled) {
-        reasonEl.classList.add('hidden');
-        reasonEl.textContent = '';
+        reasonEl.style.display = 'none';
+        reasonEl.textContent   = '';
       } else if (reason) {
-        reasonEl.textContent = reason;
-        reasonEl.classList.remove('hidden');
+        reasonEl.textContent   = reason;
+        reasonEl.style.display = 'block';
       }
     },
     mount(): HTMLElement {
