@@ -897,14 +897,13 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   controls.target.set(0, 0, 0);
   controls.update();
 
-  // ── Ambient : lumière diffuse de l'eau — assez clair pour voir partout mais
-  //    suffisamment faible pour que le soleil crée de vraies ombres
-  // HemisphereLight : ciel bleu chaud en haut, sable clair en rebond en bas
-  scene.add(new THREE.HemisphereLight(0x88ccff, 0xf0e8c0, 1.8));
-  scene.add(new THREE.AmbientLight(0xdd7744, 1.2));
+  // ── Ambient Bikini Bottom : océan cyan vif en haut, sable doré en rebond
+  scene.add(new THREE.HemisphereLight(0x00ccff, 0xffdd66, 2.8));
+  // Ambient jaune Bob l'éponge — teinte toutes les surfaces du jaune caractéristique
+  scene.add(new THREE.AmbientLight(0xffee22, 2.0));
 
-  // ── Soleil principal : rayon de soleil tropical filtré par l'eau, très chaud
-  const keyLight = new THREE.DirectionalLight(0xffcc66, 11.0);
+  // ── Soleil principal : rayon tropical filtré par l'eau, jaune vif saturé
+  const keyLight = new THREE.DirectionalLight(0xffdd00, 13.0);
   keyLight.position.set(6, 28, -8);
   keyLight.castShadow = true;
   keyLight.shadow.mapSize.width  = 2048;
@@ -920,25 +919,30 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   keyLight.shadow.radius        =  4;
   scene.add(keyLight);
 
-  // ── Second soleil décalé : donne un halo chaud sur l'autre côté
-  const sunB = new THREE.DirectionalLight(0xffaa44, 4.0);
+  // ── Second soleil : corail chaud Patrick Star depuis l'autre côté
+  const sunB = new THREE.DirectionalLight(0xff8833, 5.5);
   sunB.position.set(-8, 18, 6);
   scene.add(sunB);
 
-  // ── Fill : lumière froide diffuse de l'eau (contre-balance la chaleur)
-  const fillLight = new THREE.DirectionalLight(0x33aaff, 2.8);
+  // ── Fill : bleu océan Bikini Bottom profond et vif
+  const fillLight = new THREE.DirectionalLight(0x0099ff, 4.0);
   fillLight.position.set(-10, 8, 16);
   scene.add(fillLight);
 
-  // ── Rim : séparation des objets du fond, teal vif
-  const rimLight = new THREE.DirectionalLight(0x00ddcc, 2.0);
+  // ── Rim : cyan électrique pour faire ressortir les silhouettes
+  const rimLight = new THREE.DirectionalLight(0x00ffee, 3.2);
   rimLight.position.set(-2, 14, -20);
   scene.add(rimLight);
 
-  // ── Lumière rasante basse : révèle le grain du sable
-  const graze = new THREE.DirectionalLight(0xffe8aa, 3.0);
+  // ── Lumière rasante basse : révèle le grain du sable doré
+  const graze = new THREE.DirectionalLight(0xffcc00, 4.5);
   graze.position.set(18, 0.5, 3);
   scene.add(graze);
+
+  // ── Corail : lumière rose/corail basse pour ambiance récif
+  const coralLight = new THREE.DirectionalLight(0xff4488, 2.5);
+  coralLight.position.set(0, 2, 20);
+  scene.add(coralLight);
 
   // ── Texture sable Ground054 ────────────────────────────────────────
   const sandTexLoader = new THREE.TextureLoader();
@@ -1054,7 +1058,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     metalness: 0.0,
   });
 
-  const logoTex = new THREE.TextureLoader().load('/flipper12logo.png');
+  const logoTex = new THREE.TextureLoader().load('/bobfunny.png');
   logoTex.colorSpace = THREE.SRGBColorSpace;
   const logoMat = new THREE.MeshStandardMaterial({
     map:              logoTex,
