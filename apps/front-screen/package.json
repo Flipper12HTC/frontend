@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "@types/qrcode": "^1.5.5",
     "@types/three": "^0.183.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.6.0",
@@ -21,6 +22,7 @@
     "@flipper/design-system": "workspace:*",
     "@flipper/game-sources": "workspace:*",
     "@flipper/ws-client": "workspace:*",
+    "qrcode": "^1.5.4",
     "three": "^0.183.2"
   }
 }

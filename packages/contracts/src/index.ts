@@ -8,6 +8,13 @@ export type {
   GameOverEvent,
   FlipperStateEvent,
   BoostChangedEvent,
+  WalletConnectedEvent,
+  PaymentProgressEvent,
+  TournamentUpdateEvent,
+  PayoutEvent,
+  RefundEvent,
+  PaymentStatus,
+  TournamentStatus,
   GameEvent,
   GameEventType,
 } from './events';

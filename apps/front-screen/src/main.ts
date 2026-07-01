@@ -1,11 +1,17 @@
 import './style.css';
 import type { GameSource } from './application/ports/game-source';
+import type { MenuController, MenuView } from './application/menu-controller';
 import { createRendererOrchestrator } from './application/renderer-orchestrator';
+import { createMenuController } from './application/menu-controller';
 import { attachKeyboardForwarder } from './infrastructure/keyboard-forwarder';
+import { attachMenuInput } from './infrastructure/menu-input';
+import { createHttpBackendApi } from './infrastructure/http-backend-api';
 import { createScene } from './adapters/scene/scene';
 import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
 import type { Flipper } from './adapters/meshes/flipper';
+import { createModeMenu } from './adapters/hud/mode-menu';
+import { createWalletQr } from './adapters/hud/wallet-qr';
 import { WsGameSource } from '@flipper/game-sources';
 
 const WS_URL = 'ws://localhost:8080/ws';
@@ -21,8 +27,17 @@ document.body.appendChild(coordsDiv);
 
 let debugActive = false;
 
-const { scene, render, resize, onMeshesReady, toggleDebug, updateDebugBall, addBallTrail, triggerShake, jellyfishBumpers } =
-  createScene(canvas);
+const {
+  scene,
+  render,
+  resize,
+  onMeshesReady,
+  toggleDebug,
+  updateDebugBall,
+  addBallTrail,
+  triggerShake,
+  jellyfishBumpers,
+} = createScene(canvas);
 const ball = createBall(scene);
 const source: GameSource = new WsGameSource({ url: WS_URL });
 
@@ -41,15 +56,13 @@ const orchestrator = createRendererOrchestrator(source, {
     updateDebugBall(position);
     addBallTrail(position);
     if (debugActive) {
-      coordsDiv.textContent =
-        `X: ${position.x.toFixed(3)}  Y: ${position.y.toFixed(3)}  Z: ${position.z.toFixed(3)}`;
+      coordsDiv.textContent = `X: ${position.x.toFixed(3)}  Y: ${position.y.toFixed(3)}  Z: ${position.z.toFixed(3)}`;
     }
   },
   onFlipperChanged(state) {
     flipperLeft?.setState(state);
     flipperRight?.setState(state);
   },
-  onScoreChanged() {},
   onGameOver() {
     ball.setVisible(false);
   },
@@ -59,10 +72,52 @@ const orchestrator = createRendererOrchestrator(source, {
   },
 });
 
-attachKeyboardForwarder({
-  backendUrl: BACKEND_URL,
-  isStartAllowed: () => true,
-});
+// --- Blockchain entry flow: arrow menu -> wallet QR payment -> start game ---
+const backendApi = createHttpBackendApi(BACKEND_URL);
+const modeMenu = createModeMenu();
+let controller: MenuController | null = null;
+const walletQr = createWalletQr({ onCancel: () => controller?.cancel() });
+modeMenu.mount();
+walletQr.mount();
+
+let menuInputDetach: (() => void) | null = null;
+let keyboardDetach: (() => void) | null = null;
+
+const view: MenuView = {
+  renderMenu: (menu) => {
+    modeMenu.render(menu);
+  },
+  showMenu: () => {
+    modeMenu.show();
+  },
+  hideMenu: () => {
+    modeMenu.hide();
+  },
+  showPayment: (snapshot, context) => {
+    walletQr.show(snapshot, context);
+  },
+  updatePayment: (snapshot) => {
+    walletQr.update(snapshot);
+  },
+  hidePayment: () => {
+    walletQr.hide();
+  },
+  onConfirmed: () => {
+    // Payment done: hand the arrow keys over from the menu to the flipper controls.
+    if (menuInputDetach) {
+      menuInputDetach();
+      menuInputDetach = null;
+    }
+    keyboardDetach ??= attachKeyboardForwarder({
+      backendUrl: BACKEND_URL,
+      isStartAllowed: () => true,
+    });
+  },
+};
+
+controller = createMenuController(backendApi, view);
+menuInputDetach = attachMenuInput(controller);
+controller.start();
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'p' || e.key === 'P') {
