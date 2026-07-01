@@ -96,12 +96,12 @@ function spawnHouses(host: HTMLElement): void {
 
 // Idempotent: re-mounting the view (e.g. HMR) shouldn't duplicate background layers.
 function ensureBackgroundLayers(): void {
-  const layers: Array<{ id: string; cls: string; fill?: (el: HTMLElement) => void }> = [
+  const layers: { id: string; cls: string; fill?: (el: HTMLElement) => void }[] = [
     { id: 'sb-flowers', cls: 'sb-flowers', fill: spawnFlowers },
     { id: 'sb-sand',    cls: 'sb-sand' },
     { id: 'sb-sand-speckles', cls: 'sb-sand-speckles' },
     { id: 'sb-houses',  cls: 'sb-houses', fill: spawnHouses },
-    { id: 'sb-bubbles', cls: 'sb-bubbles', fill: (el) => spawnBubbles(el) },
+    { id: 'sb-bubbles', cls: 'sb-bubbles', fill: spawnBubbles },
   ];
   for (const layer of layers) {
     if (document.getElementById(layer.id)) continue;
