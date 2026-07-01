@@ -37,7 +37,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
 }
@@ -49,11 +50,13 @@ body {
   position: relative;
   background:
     radial-gradient(ellipse at 50% -10%, #fffbe0 0%, transparent 55%),
-    linear-gradient(180deg,
+    linear-gradient(
+      180deg,
       var(--sb-cyan-light) 0%,
       var(--sb-cyan) 22%,
       var(--sb-blue) 60%,
-      var(--sb-blue-deep) 100%);
+      var(--sb-blue-deep) 100%
+    );
 }
 
 /* ---------- Sun rays (fixed, no rotation = no seam) ---------- */
@@ -62,29 +65,40 @@ body::before {
   position: fixed;
   inset: -10vh -10vw -10vh -10vw;
   pointer-events: none;
-  background:
-    conic-gradient(from 200deg at 50% -8%,
-      transparent 0deg,
-      rgba(255, 255, 220, 0.20) 8deg,
-      transparent 14deg,
-      transparent 22deg,
-      rgba(255, 255, 220, 0.14) 28deg,
-      transparent 34deg,
-      transparent 46deg,
-      rgba(255, 255, 220, 0.20) 52deg,
-      transparent 58deg,
-      transparent 68deg,
-      rgba(255, 255, 220, 0.12) 74deg,
-      transparent 80deg,
-      transparent 96deg,
-      rgba(255, 255, 220, 0.18) 102deg,
-      transparent 110deg,
-      transparent 124deg,
-      rgba(255, 255, 220, 0.14) 130deg,
-      transparent 138deg,
-      transparent 320deg);
-  mask-image: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, transparent 70%);
-  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, transparent 70%);
+  background: conic-gradient(
+    from 200deg at 50% -8%,
+    transparent 0deg,
+    rgba(255, 255, 220, 0.2) 8deg,
+    transparent 14deg,
+    transparent 22deg,
+    rgba(255, 255, 220, 0.14) 28deg,
+    transparent 34deg,
+    transparent 46deg,
+    rgba(255, 255, 220, 0.2) 52deg,
+    transparent 58deg,
+    transparent 68deg,
+    rgba(255, 255, 220, 0.12) 74deg,
+    transparent 80deg,
+    transparent 96deg,
+    rgba(255, 255, 220, 0.18) 102deg,
+    transparent 110deg,
+    transparent 124deg,
+    rgba(255, 255, 220, 0.14) 130deg,
+    transparent 138deg,
+    transparent 320deg
+  );
+  mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    transparent 70%
+  );
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    transparent 70%
+  );
   z-index: 0;
 }
 
@@ -105,12 +119,14 @@ body::before {
   inset: 0;
   background:
     radial-gradient(ellipse 80% 60% at 50% 100%, var(--sb-sand-deep) 0%, transparent 75%),
-    linear-gradient(180deg,
+    linear-gradient(
+      180deg,
       transparent 0%,
       rgba(255, 244, 212, 0.55) 12%,
       var(--sb-sand-top) 28%,
       var(--sb-sand) 65%,
-      var(--sb-sand-deep) 100%);
+      var(--sb-sand-deep) 100%
+    );
 }
 
 .sb-sand::after {
@@ -121,7 +137,7 @@ body::before {
   top: -3px;
   height: 80px;
   background-image:
-    radial-gradient(ellipse 70px 22px at 4% 100%,  var(--sb-sand-top) 60%, transparent 62%),
+    radial-gradient(ellipse 70px 22px at 4% 100%, var(--sb-sand-top) 60%, transparent 62%),
     radial-gradient(ellipse 95px 28px at 14% 100%, var(--sb-sand-top) 60%, transparent 62%),
     radial-gradient(ellipse 80px 24px at 26% 100%, var(--sb-sand-top) 60%, transparent 62%),
     radial-gradient(ellipse 110px 32px at 40% 100%, var(--sb-sand-top) 60%, transparent 62%),
@@ -165,8 +181,13 @@ body::before {
 }
 
 @keyframes sb-flower-sway {
-  0%, 100% { transform: rotate(-3deg); }
-  50%      { transform: rotate(3deg); }
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
 }
 
 /* ---------- Bubbles ---------- */
@@ -182,8 +203,13 @@ body::before {
   position: absolute;
   bottom: -80px;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.35) 30%, rgba(255,255,255,0.05) 60%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.35) 30%,
+    rgba(255, 255, 255, 0.05) 60%,
+    rgba(255, 255, 255, 0) 70%
+  );
   border: 2px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
   animation-name: sb-bubble-rise;
@@ -192,11 +218,23 @@ body::before {
 }
 
 @keyframes sb-bubble-rise {
-  0%   { transform: translate(0, 0) scale(0.6); opacity: 0; }
-  10%  { opacity: 0.9; }
-  50%  { transform: translate(20px, -55vh) scale(1); }
-  90%  { opacity: 0.85; }
-  100% { transform: translate(-20px, -115vh) scale(1.05); opacity: 0; }
+  0% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(20px, -55vh) scale(1);
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-20px, -115vh) scale(1.05);
+    opacity: 0;
+  }
 }
 
 /* ---------- Decor: houses ---------- */
@@ -234,8 +272,13 @@ body::before {
 }
 
 @keyframes sb-house-bob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 /* Bottom-left cluster: Krusty Krab + Sandy dome */
@@ -278,7 +321,7 @@ body::before {
   position: relative;
   z-index: 4;
   padding-top: 2vh !important;
-  padding-bottom: 38vh !important;  /* leave room for the sand + houses */
+  padding-bottom: 38vh !important; /* leave room for the sand + houses */
   gap: 0.6rem !important;
 }
 
@@ -286,15 +329,18 @@ body::before {
 .sb-title-img {
   width: clamp(220px, 26vw, 420px);
   height: auto;
-  filter:
-    drop-shadow(0 6px 0 rgba(0, 0, 0, 0.25))
-    drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.25)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4));
   animation: sb-wobble 4s ease-in-out infinite;
 }
 
 @keyframes sb-wobble {
-  0%, 100% { transform: rotate(-2deg) translateY(0); }
-  50%      { transform: rotate(1.5deg) translateY(-4px); }
+  0%,
+  100% {
+    transform: rotate(-2deg) translateY(0);
+  }
+  50% {
+    transform: rotate(1.5deg) translateY(-4px);
+  }
 }
 
 /* ---------- Banner ---------- */
@@ -303,8 +349,12 @@ body::before {
   letter-spacing: 0.12em;
   color: #fff;
   -webkit-text-stroke: 2px var(--sb-brown);
-  text-shadow: 0 4px 0 var(--sb-brown), 0 8px 16px rgba(0,0,0,0.25);
-  transition: opacity 250ms ease, transform 250ms ease;
+  text-shadow:
+    0 4px 0 var(--sb-brown),
+    0 8px 16px rgba(0, 0, 0, 0.25);
+  transition:
+    opacity 250ms ease,
+    transform 250ms ease;
 }
 
 .sb-banner.is-over {
@@ -313,9 +363,16 @@ body::before {
 }
 
 @keyframes sb-shake {
-  0%, 100% { transform: translateX(0) rotate(-1deg); }
-  25%      { transform: translateX(-8px) rotate(-2deg); }
-  75%      { transform: translateX(8px) rotate(1deg); }
+  0%,
+  100% {
+    transform: translateX(0) rotate(-1deg);
+  }
+  25% {
+    transform: translateX(-8px) rotate(-2deg);
+  }
+  75% {
+    transform: translateX(8px) rotate(1deg);
+  }
 }
 
 /* ---------- Score panel (focal element, Krusty Krab sign vibe) ---------- */
@@ -346,16 +403,20 @@ body::before {
   border-radius: 50%;
   border: 3px solid var(--sb-brown);
   transform: translateY(-50%);
-  box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
 }
-.sb-score-panel::before { left: -16px; }
-.sb-score-panel::after  { right: -16px; }
+.sb-score-panel::before {
+  left: -16px;
+}
+.sb-score-panel::after {
+  right: -16px;
+}
 
 .sb-score-label {
   font-family: var(--font-cartoon-alt);
   letter-spacing: 0.16em;
   color: var(--sb-brown);
-  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   font-size: clamp(0.9rem, 1.4vw, 1.2rem);
   margin-bottom: 0.2rem;
 }
@@ -367,8 +428,13 @@ body::before {
 }
 
 @keyframes sb-final-flash {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .sb-score-value {
@@ -377,7 +443,7 @@ body::before {
   -webkit-text-stroke: 3px var(--sb-brown);
   text-shadow:
     0 4px 0 var(--sb-brown),
-    0 6px 0 rgba(0,0,0,0.18);
+    0 6px 0 rgba(0, 0, 0, 0.18);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   display: inline-block;
@@ -390,10 +456,19 @@ body::before {
 }
 
 @keyframes sb-score-pop {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.18) rotate(-2deg); color: var(--sb-orange); }
-  70%  { transform: scale(0.96) rotate(1deg); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18) rotate(-2deg);
+    color: var(--sb-orange);
+  }
+  70% {
+    transform: scale(0.96) rotate(1deg);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Floating "+points" indicator (inside the panel, top-right corner) */
@@ -416,9 +491,18 @@ body::before {
 }
 
 @keyframes sb-popup {
-  0%   { opacity: 0; transform: translateY(20px) scale(0.6); }
-  20%  { opacity: 1; transform: translateY(0) scale(1.2) rotate(-4deg); }
-  100% { opacity: 0; transform: translateY(-50px) scale(1) rotate(6deg); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1.2) rotate(-4deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px) scale(1) rotate(6deg);
+  }
 }
 
 /* ---------- Bottom HUD: multiplier + patties (one compact row) ---------- */
@@ -441,14 +525,21 @@ body::before {
   border-radius: 999px;
   border: 3px solid var(--sb-brown);
   font-size: clamp(1.2rem, 2vw, 1.8rem);
-  box-shadow: 0 4px 0 var(--sb-brown), 0 6px 12px rgba(0,0,0,0.3);
+  box-shadow:
+    0 4px 0 var(--sb-brown),
+    0 6px 12px rgba(0, 0, 0, 0.3);
   transform: rotate(-3deg);
   animation: sb-mult-wobble 3s ease-in-out infinite;
 }
 
 @keyframes sb-mult-wobble {
-  0%, 100% { transform: rotate(-3deg) translateY(0); }
-  50%      { transform: rotate(2deg) translateY(-3px); }
+  0%,
+  100% {
+    transform: rotate(-3deg) translateY(0);
+  }
+  50% {
+    transform: rotate(2deg) translateY(-3px);
+  }
 }
 
 /* Multiplier pill glows electric while boost is active */
@@ -463,8 +554,13 @@ body::before {
 }
 
 @keyframes sb-mult-boost {
-  0%, 100% { transform: rotate(-3deg) scale(1); }
-  50%      { transform: rotate(3deg) scale(1.12); }
+  0%,
+  100% {
+    transform: rotate(-3deg) scale(1);
+  }
+  50% {
+    transform: rotate(3deg) scale(1.12);
+  }
 }
 
 /* ---------- Boost overlay (x3 jellyfish boost) ---------- */
@@ -494,9 +590,15 @@ body::before {
 }
 
 @keyframes sb-boost-flash {
-  0%   { opacity: 0; }
-  15%  { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .sb-boost-banner {
@@ -515,8 +617,9 @@ body::before {
 }
 
 .sb-boost.is-active .sb-boost-banner {
-  animation: sb-boost-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-             sb-boost-idle 1.2s ease-in-out 0.6s infinite;
+  animation:
+    sb-boost-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    sb-boost-idle 1.2s ease-in-out 0.6s infinite;
 }
 
 .sb-boost-zap {
@@ -526,19 +629,37 @@ body::before {
 }
 
 @keyframes sb-zap-flicker {
-  0%, 100% { opacity: 1; transform: rotate(-6deg); }
-  50%      { opacity: 0.5; transform: rotate(6deg); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: rotate(-6deg);
+  }
+  50% {
+    opacity: 0.5;
+    transform: rotate(6deg);
+  }
 }
 
 @keyframes sb-boost-pop {
-  0%   { transform: scale(0) rotate(-8deg); }
-  70%  { transform: scale(1.25) rotate(4deg); }
-  100% { transform: scale(1) rotate(-2deg); }
+  0% {
+    transform: scale(0) rotate(-8deg);
+  }
+  70% {
+    transform: scale(1.25) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(-2deg);
+  }
 }
 
 @keyframes sb-boost-idle {
-  0%, 100% { transform: scale(1) rotate(-2deg); }
-  50%      { transform: scale(1.06) rotate(2deg); }
+  0%,
+  100% {
+    transform: scale(1) rotate(-2deg);
+  }
+  50% {
+    transform: scale(1.06) rotate(2deg);
+  }
 }
 
 /* Countdown bar */
@@ -549,7 +670,9 @@ body::before {
   border: 3px solid var(--sb-brown);
   border-radius: 999px;
   overflow: hidden;
-  box-shadow: 0 4px 0 var(--sb-brown), inset 0 2px 4px rgba(0,0,0,0.4);
+  box-shadow:
+    0 4px 0 var(--sb-brown),
+    inset 0 2px 4px rgba(0, 0, 0, 0.4);
   transform: scale(0);
 }
 
@@ -589,23 +712,35 @@ body::before {
   width: clamp(46px, 4.5vw, 64px);
   height: clamp(46px, 4.5vw, 64px);
   background: url('/image/KrabbyPatty.png') center / contain no-repeat;
-  transition: opacity 250ms ease, transform 250ms ease, filter 250ms ease;
+  transition:
+    opacity 250ms ease,
+    transform 250ms ease,
+    filter 250ms ease;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
   animation: sb-patty-float 3.2s ease-in-out infinite;
 }
 
-.sb-patty:nth-child(2) { animation-delay: -1s; }
-.sb-patty:nth-child(3) { animation-delay: -2s; }
+.sb-patty:nth-child(2) {
+  animation-delay: -1s;
+}
+.sb-patty:nth-child(3) {
+  animation-delay: -2s;
+}
 
 @keyframes sb-patty-float {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50%      { transform: translateY(-5px) rotate(3deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(3deg);
+  }
 }
 
 .sb-patty.is-eaten {
   opacity: 0.25;
   transform: scale(0.85) rotate(-12deg);
-  filter: grayscale(0.6) drop-shadow(0 2px 0 rgba(0,0,0,0.2));
+  filter: grayscale(0.6) drop-shadow(0 2px 0 rgba(0, 0, 0, 0.2));
   animation: none;
 }
 
@@ -623,14 +758,21 @@ body::before {
   letter-spacing: 0.08em;
   color: var(--sb-yellow);
   -webkit-text-stroke: 2px var(--sb-brown);
-  text-shadow: 0 3px 0 var(--sb-brown), 0 6px 14px rgba(0,0,0,0.3);
+  text-shadow:
+    0 3px 0 var(--sb-brown),
+    0 6px 14px rgba(0, 0, 0, 0.3);
   font-size: clamp(1.3rem, 2vw, 2rem);
   animation: sb-cta-bob 1.4s ease-in-out infinite;
 }
 
 @keyframes sb-cta-bob {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50%      { transform: translateY(-4px) rotate(1deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(1deg);
+  }
 }
 
 .sb-plunger {
@@ -653,7 +795,9 @@ body::before {
   background: linear-gradient(180deg, #c98b4d 0%, #8c5a2a 60%, #5e3a18 100%);
   border: 2.5px solid var(--sb-brown-deep);
   border-radius: 6px;
-  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.18);
+  box-shadow:
+    inset 0 -3px 0 rgba(0, 0, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.18);
 }
 
 /* Rod + spring container — animated as a whole (pull back then snap forward) */
@@ -665,7 +809,7 @@ body::before {
   height: 30%;
   display: flex;
   align-items: center;
-  animation: sb-plunger-pull 2.4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+  animation: sb-plunger-pull 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   transform-origin: right center;
 }
 
@@ -674,15 +818,17 @@ body::before {
   content: '';
   flex: 1;
   height: 100%;
-  background: linear-gradient(180deg,
+  background: linear-gradient(
+    180deg,
     #f5f5f5 0%,
     #dcdcdc 30%,
     #9a9a9a 55%,
     #cfcfcf 80%,
-    #f5f5f5 100%);
+    #f5f5f5 100%
+  );
   border: 2px solid var(--sb-brown-deep);
   border-radius: 6px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 /* The red knob at the end (handle the player pulls) */
@@ -693,14 +839,13 @@ body::before {
   width: 26%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 30%, #ffb1b1 0%, var(--sb-red) 40%, #9d1a1a 100%);
+  background: radial-gradient(circle at 32% 30%, #ffb1b1 0%, var(--sb-red) 40%, #9d1a1a 100%);
   border: 3px solid var(--sb-brown-deep);
   transform: translateY(-50%);
   box-shadow:
-    inset 0 -6px 0 rgba(0,0,0,0.3),
-    inset 0 4px 0 rgba(255,255,255,0.35),
-    0 4px 0 rgba(0,0,0,0.3);
+    inset 0 -6px 0 rgba(0, 0, 0, 0.3),
+    inset 0 4px 0 rgba(255, 255, 255, 0.35),
+    0 4px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* The coiled spring on the left of the rod */
@@ -721,9 +866,9 @@ body::before {
   );
   border: 2px solid var(--sb-brown-deep);
   border-radius: 4px;
-  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.3);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.3);
   /* Spring compresses & releases in sync with the rod */
-  animation: sb-plunger-spring 2.4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+  animation: sb-plunger-spring 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   transform-origin: left center;
 }
 
@@ -739,40 +884,75 @@ body::before {
   text-shadow: 0 3px 0 var(--sb-brown);
   font-size: clamp(1.4rem, 2vw, 2rem);
   text-align: center;
-  animation: sb-plunger-arrow 2.4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+  animation: sb-plunger-arrow 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes sb-plunger-pull {
-  0%   { transform: translateX(0); }
-  35%  { transform: translateX(22%); }  /* slow pull-back */
-  55%  { transform: translateX(22%); }  /* held */
-  70%  { transform: translateX(-2%); }  /* snap forward */
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(22%);
+  } /* slow pull-back */
+  55% {
+    transform: translateX(22%);
+  } /* held */
+  70% {
+    transform: translateX(-2%);
+  } /* snap forward */
+  100% {
+    transform: translateX(0);
+  }
 }
 
 @keyframes sb-plunger-spring {
-  0%   { transform: scaleX(1); }
-  35%  { transform: scaleX(0.45); }  /* compressed */
-  55%  { transform: scaleX(0.45); }
-  70%  { transform: scaleX(1.08); }  /* over-extended */
-  100% { transform: scaleX(1); }
+  0% {
+    transform: scaleX(1);
+  }
+  35% {
+    transform: scaleX(0.45);
+  } /* compressed */
+  55% {
+    transform: scaleX(0.45);
+  }
+  70% {
+    transform: scaleX(1.08);
+  } /* over-extended */
+  100% {
+    transform: scaleX(1);
+  }
 }
 
 @keyframes sb-plunger-arrow {
-  0%, 100% { transform: translateX(0); opacity: 0.95; }
-  35%      { transform: translateX(20%); opacity: 1; }
-  55%      { transform: translateX(20%); opacity: 1; }
-  70%      { transform: translateX(0); opacity: 0.4; }
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.95;
+  }
+  35% {
+    transform: translateX(20%);
+    opacity: 1;
+  }
+  55% {
+    transform: translateX(20%);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(0);
+    opacity: 0.4;
+  }
 }
 
 /* ---------- Hint ---------- */
 .sb-hint {
   font-family: 'Patrick Hand', cursive;
   color: #fff;
-  text-shadow: 0 2px 0 rgba(0,0,0,0.4);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
   font-size: clamp(0.85rem, 1.1vw, 1rem);
   letter-spacing: 0.08em;
   opacity: 0.85;
 }
 
-.sb-hidden { display: none !important; }
+.sb-hidden {
+  display: none !important;
+}

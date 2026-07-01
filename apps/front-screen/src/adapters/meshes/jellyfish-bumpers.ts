@@ -24,7 +24,8 @@ export interface JellyfishBumpers {
 
 // Visual tuning — jellyfish stand a bit taller than the squat bumper they replace.
 const SCALE_MULT = 1.25;
-const Y_OFFSET = 0;4;
+const Y_OFFSET = 0;
+4;
 const HIT_FALLBACK_DURATION = 0.35;
 
 function pickClip(
@@ -61,7 +62,7 @@ export function createJellyfishBumpers(
       const tplSize = tplBox.getSize(new THREE.Vector3());
       const tplRadius = Math.max(tplSize.x, tplSize.z) / 2 || 1;
 
-      const bumpers = ids ? TABLE.bumpers.filter(b => ids.includes(b.id)) : TABLE.bumpers;
+      const bumpers = ids ? TABLE.bumpers.filter((b) => ids.includes(b.id)) : TABLE.bumpers;
       for (const b of bumpers) {
         // SkeletonUtils.clone keeps skinned meshes hooked to a fresh skeleton
         // — required so each instance can run its own AnimationMixer.

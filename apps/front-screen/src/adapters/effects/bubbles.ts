@@ -6,10 +6,10 @@ export function makeBubbleSprite(): THREE.Texture {
   c.width = c.height = 64;
   const ctx = c.getContext('2d')!;
   const g = ctx.createRadialGradient(32, 32, 6, 32, 32, 28);
-  g.addColorStop(0,   'rgba(135,206,250,0)');
+  g.addColorStop(0, 'rgba(135,206,250,0)');
   g.addColorStop(0.6, 'rgba(135,206,250,0.07)');
   g.addColorStop(0.8, 'rgba(180,230,255,0.7)');
-  g.addColorStop(1,   'rgba(255,255,255,0)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(32, 32, 28, 0, Math.PI * 2);

@@ -16,10 +16,10 @@ export function createStartOverlay(onStart: () => void): StartOverlayHandle {
   bubbles.className = 'overlay-bubbles';
   for (let i = 0; i < 18; i++) {
     const b = document.createElement('div');
-    const size  = 8 + Math.random() * 30;
-    const left  = Math.random() * 100;
+    const size = 8 + Math.random() * 30;
+    const left = Math.random() * 100;
     const delay = Math.random() * 6;
-    const dur   = 4 + Math.random() * 5;
+    const dur = 4 + Math.random() * 5;
     b.className = 'overlay-bubble';
     b.style.cssText = [
       `bottom:-${size}px;left:${left}%;`,
@@ -67,16 +67,22 @@ export function createStartOverlay(onStart: () => void): StartOverlayHandle {
   document.addEventListener('keydown', handler);
 
   return {
-    show(): void  { root.style.display = 'flex'; },
-    hide(): void  { root.style.display = 'none'; },
-    isVisible(): boolean { return root.style.display !== 'none'; },
+    show(): void {
+      root.style.display = 'flex';
+    },
+    hide(): void {
+      root.style.display = 'none';
+    },
+    isVisible(): boolean {
+      return root.style.display !== 'none';
+    },
     setEnabled(enabled: boolean, reason?: string): void {
       button.disabled = !enabled;
       if (enabled) {
         reasonEl.style.display = 'none';
-        reasonEl.textContent   = '';
+        reasonEl.textContent = '';
       } else if (reason) {
-        reasonEl.textContent   = reason;
+        reasonEl.textContent = reason;
         reasonEl.style.display = 'block';
       }
     },

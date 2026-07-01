@@ -30,19 +30,115 @@ interface FlowerSpec {
 // central UI column, plus a tiny "garden" on the sand line.
 const FLOWERS: FlowerSpec[] = [
   // upper water — large soft outlines
-  { src: 'BlueFlower.png',   leftPct: 4,  bottomPct: 78, size: 90, opacity: 0.5,  rotate: -8,  delay: 0 },
-  { src: 'PurpleFlower.png', leftPct: 16, bottomPct: 60, size: 70, opacity: 0.45, rotate: 6,   delay: -1.2 },
-  { src: 'YellowFlower.png', leftPct: 30, bottomPct: 88, size: 60, opacity: 0.5,  rotate: -4,  delay: -2.5 },
-  { src: 'GreenFlower.png',  leftPct: 22, bottomPct: 42, size: 55, opacity: 0.45, rotate: 10,  delay: -3.5 },
-  { src: 'RedFlower.png',    leftPct: 70, bottomPct: 78, size: 70, opacity: 0.5,  rotate: -10, delay: -0.8 },
-  { src: 'BlueFlower.png',   leftPct: 92, bottomPct: 70, size: 90, opacity: 0.5,  rotate: 4,   delay: -2 },
-  { src: 'YellowFlower.png', leftPct: 82, bottomPct: 88, size: 55, opacity: 0.5,  rotate: -6,  delay: -4 },
-  { src: 'PurpleFlower.png', leftPct: 78, bottomPct: 50, size: 65, opacity: 0.45, rotate: 8,   delay: -5 },
+  {
+    src: 'BlueFlower.png',
+    leftPct: 4,
+    bottomPct: 78,
+    size: 90,
+    opacity: 0.5,
+    rotate: -8,
+    delay: 0,
+  },
+  {
+    src: 'PurpleFlower.png',
+    leftPct: 16,
+    bottomPct: 60,
+    size: 70,
+    opacity: 0.45,
+    rotate: 6,
+    delay: -1.2,
+  },
+  {
+    src: 'YellowFlower.png',
+    leftPct: 30,
+    bottomPct: 88,
+    size: 60,
+    opacity: 0.5,
+    rotate: -4,
+    delay: -2.5,
+  },
+  {
+    src: 'GreenFlower.png',
+    leftPct: 22,
+    bottomPct: 42,
+    size: 55,
+    opacity: 0.45,
+    rotate: 10,
+    delay: -3.5,
+  },
+  {
+    src: 'RedFlower.png',
+    leftPct: 70,
+    bottomPct: 78,
+    size: 70,
+    opacity: 0.5,
+    rotate: -10,
+    delay: -0.8,
+  },
+  {
+    src: 'BlueFlower.png',
+    leftPct: 92,
+    bottomPct: 70,
+    size: 90,
+    opacity: 0.5,
+    rotate: 4,
+    delay: -2,
+  },
+  {
+    src: 'YellowFlower.png',
+    leftPct: 82,
+    bottomPct: 88,
+    size: 55,
+    opacity: 0.5,
+    rotate: -6,
+    delay: -4,
+  },
+  {
+    src: 'PurpleFlower.png',
+    leftPct: 78,
+    bottomPct: 50,
+    size: 65,
+    opacity: 0.45,
+    rotate: 8,
+    delay: -5,
+  },
   // small "garden" on the sand line (visible + saturated)
-  { src: 'RedFlower.png',    leftPct: 40, bottomPct: 22, size: 38, opacity: 0.95, rotate: -6,  delay: -1 },
-  { src: 'YellowFlower.png', leftPct: 48, bottomPct: 20, size: 34, opacity: 0.95, rotate: 4,   delay: -2.3 },
-  { src: 'GreenFlower.png',  leftPct: 56, bottomPct: 23, size: 40, opacity: 0.95, rotate: -8,  delay: -3.1 },
-  { src: 'PurpleFlower.png', leftPct: 62, bottomPct: 21, size: 34, opacity: 0.95, rotate: 6,   delay: -1.7 },
+  {
+    src: 'RedFlower.png',
+    leftPct: 40,
+    bottomPct: 22,
+    size: 38,
+    opacity: 0.95,
+    rotate: -6,
+    delay: -1,
+  },
+  {
+    src: 'YellowFlower.png',
+    leftPct: 48,
+    bottomPct: 20,
+    size: 34,
+    opacity: 0.95,
+    rotate: 4,
+    delay: -2.3,
+  },
+  {
+    src: 'GreenFlower.png',
+    leftPct: 56,
+    bottomPct: 23,
+    size: 40,
+    opacity: 0.95,
+    rotate: -8,
+    delay: -3.1,
+  },
+  {
+    src: 'PurpleFlower.png',
+    leftPct: 62,
+    bottomPct: 21,
+    size: 34,
+    opacity: 0.95,
+    rotate: 6,
+    delay: -1.7,
+  },
 ];
 
 function spawnBubbles(host: HTMLElement, count = 18): void {
@@ -77,11 +173,11 @@ function spawnFlowers(host: HTMLElement): void {
 
 function spawnHouses(host: HTMLElement): void {
   const houses = [
-    { cls: 'sb-house--krusty',    src: 'KrabRestaurant.png',  alt: 'The Krusty Krab' },
-    { cls: 'sb-house--sandy',     src: 'SandyHouse.png',      alt: "Sandy's Treedome" },
-    { cls: 'sb-house--squidward', src: 'SquidwardHouse.png',  alt: "Squidward's Easter Island" },
-    { cls: 'sb-house--patrick',   src: 'PatrickHouse.png',    alt: "Patrick's Rock" },
-    { cls: 'sb-house--bob',       src: 'BobHouse.png',        alt: "SpongeBob's Pineapple" },
+    { cls: 'sb-house--krusty', src: 'KrabRestaurant.png', alt: 'The Krusty Krab' },
+    { cls: 'sb-house--sandy', src: 'SandyHouse.png', alt: "Sandy's Treedome" },
+    { cls: 'sb-house--squidward', src: 'SquidwardHouse.png', alt: "Squidward's Easter Island" },
+    { cls: 'sb-house--patrick', src: 'PatrickHouse.png', alt: "Patrick's Rock" },
+    { cls: 'sb-house--bob', src: 'BobHouse.png', alt: "SpongeBob's Pineapple" },
   ];
   for (const h of houses) {
     const wrap = document.createElement('div');
@@ -98,9 +194,9 @@ function spawnHouses(host: HTMLElement): void {
 function ensureBackgroundLayers(): void {
   const layers: Array<{ id: string; cls: string; fill?: (el: HTMLElement) => void }> = [
     { id: 'sb-flowers', cls: 'sb-flowers', fill: spawnFlowers },
-    { id: 'sb-sand',    cls: 'sb-sand' },
+    { id: 'sb-sand', cls: 'sb-sand' },
     { id: 'sb-sand-speckles', cls: 'sb-sand-speckles' },
-    { id: 'sb-houses',  cls: 'sb-houses', fill: spawnHouses },
+    { id: 'sb-houses', cls: 'sb-houses', fill: spawnHouses },
     { id: 'sb-bubbles', cls: 'sb-bubbles', fill: (el) => spawnBubbles(el) },
   ];
   for (const layer of layers) {

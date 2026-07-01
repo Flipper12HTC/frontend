@@ -48,10 +48,6 @@ export function withGameOver(state: Scoreboard, finalScore: number): Scoreboard 
   return { ...state, status: 'over', finalScore, boostActive: false };
 }
 
-export function withBoost(
-  state: Scoreboard,
-  active: boolean,
-  durationMs: number,
-): Scoreboard {
+export function withBoost(state: Scoreboard, active: boolean, durationMs: number): Scoreboard {
   return { ...state, boostActive: active, boostDurationMs: durationMs };
 }

@@ -34,7 +34,7 @@ export function attachKeyboardForwarder(options: KeyboardForwarderOptions): () =
     void fetch(`${backendUrl}/game/start`, { method: 'POST' }).catch(() => undefined);
   }
 
-/** Force a full game restart regardless of current state. */
+  /** Force a full game restart regardless of current state. */
   function postRestart(): void {
     void fetch(`${backendUrl}/game/restart`, { method: 'POST' }).catch(() => undefined);
   }
