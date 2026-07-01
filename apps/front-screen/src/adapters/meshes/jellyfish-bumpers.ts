@@ -24,7 +24,7 @@ export interface JellyfishBumpers {
 
 // Visual tuning — jellyfish stand a bit taller than the squat bumper they replace.
 const SCALE_MULT = 1.25;
-const Y_OFFSET = 0;4;
+const Y_OFFSET = 0.4;
 const HIT_FALLBACK_DURATION = 0.35;
 
 function pickClip(
@@ -75,9 +75,10 @@ export function createJellyfishBumpers(
         // Matériau émissif léger sur tous les meshes de la méduse
         root.traverse((obj) => {
           if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
-            obj.material = obj.material.clone();
-            obj.material.emissive = new THREE.Color(0xff66cc);
-            obj.material.emissiveIntensity = 0.18;
+            const mat = obj.material.clone() as THREE.MeshStandardMaterial;
+            mat.emissive = new THREE.Color(0xff66cc);
+            mat.emissiveIntensity = 0.18;
+            obj.material = mat;
           }
         });
 
@@ -122,6 +123,7 @@ export function createJellyfishBumpers(
     },
     undefined,
     (err) => {
+      // eslint-disable-next-line no-console
       console.error('[jellyfish-bumpers] failed to load JellyFish.glb', err);
     },
   );

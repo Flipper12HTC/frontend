@@ -58,7 +58,7 @@ const orchestrator = createRendererOrchestrator(source, {
     flipperLeft?.setState(state);
     flipperRight?.setState(state);
   },
-  onScoreChanged() {},
+  onScoreChanged() { /* noop */ },
   onGameOver() {
     ball.setVisible(false);
   },
