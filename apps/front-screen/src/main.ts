@@ -7,6 +7,7 @@ import { createBall } from './adapters/meshes/ball';
 import { createFlipper } from './adapters/meshes/flipper';
 import type { Flipper } from './adapters/meshes/flipper';
 import { WsGameSource } from '@flipper/game-sources';
+import { createSoundManager } from './adapters/audio/sound-manager';
 
 const WS_URL = 'ws://localhost:8080/ws';
 const BACKEND_URL =
@@ -33,6 +34,9 @@ onMeshesReady(({ flipperLeft: leftMesh, flipperRight: rightMesh }) => {
   flipperLeft = createFlipper(scene, leftMesh, { side: 'left' });
   flipperRight = createFlipper(scene, rightMesh, { side: 'right' });
 });
+
+const soundManager = createSoundManager();
+soundManager.attach(source);
 
 const orchestrator = createRendererOrchestrator(source, {
   onBallMoved(position) {
@@ -64,12 +68,17 @@ attachKeyboardForwarder({
   isStartAllowed: () => true,
 });
 
+let mutedSound = false;
 window.addEventListener('keydown', (e) => {
   if (e.key === 'p' || e.key === 'P') {
     debugActive = !debugActive;
     toggleDebug();
     coordsDiv.style.display = debugActive ? 'block' : 'none';
     if (!debugActive) coordsDiv.textContent = '';
+  }
+  if (e.key === 'm' || e.key === 'M') {
+    mutedSound = !mutedSound;
+    soundManager.setMuted(mutedSound);
   }
 });
 

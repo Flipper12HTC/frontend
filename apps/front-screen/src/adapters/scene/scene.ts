@@ -92,7 +92,8 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   scene.fog = new THREE.FogExp2(0x1a6a9a, 0.005);
 
   const camera = new THREE.PerspectiveCamera(55, RENDER_WIDTH / RENDER_HEIGHT, 0.1, 1000);
-  camera.position.set(0, 32, 36);
+  camera.position.set(0, 17.5, 0);
+  camera.up.set(0, 0, -1);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -110,14 +111,9 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   pmrem.dispose();
 
   const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.enableRotate  = true;
-  controls.enablePan     = true;
-  controls.enableZoom    = true;
-  controls.minDistance   = 4;
-  controls.maxDistance   = 60;
-  controls.maxPolarAngle = Math.PI * 0.46;
+  controls.enableRotate = false;
+  controls.enablePan    = false;
+  controls.enableZoom   = false;
   controls.target.set(0, 0, 0);
   controls.update();
 
@@ -141,11 +137,25 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   keyLight.shadow.radius        =  4;
   scene.add(keyLight);
 
-  scene.add(Object.assign(new THREE.DirectionalLight(0xff8833, 5.5), { position: new THREE.Vector3(-8, 18, 6) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0x0099ff, 4.0), { position: new THREE.Vector3(-10, 8, 16) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0x00ffee, 3.2), { position: new THREE.Vector3(-2, 14, -20) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0xffcc00, 4.5), { position: new THREE.Vector3(18, 0.5, 3) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0xff4488, 2.5), { position: new THREE.Vector3(0, 2, 20) }));
+  const fillLight1 = new THREE.DirectionalLight(0xff8833, 5.5);
+  fillLight1.position.set(-8, 18, 6);
+  scene.add(fillLight1);
+
+  const fillLight2 = new THREE.DirectionalLight(0x0099ff, 4.0);
+  fillLight2.position.set(-10, 8, 16);
+  scene.add(fillLight2);
+
+  const fillLight3 = new THREE.DirectionalLight(0x00ffee, 3.2);
+  fillLight3.position.set(-2, 14, -20);
+  scene.add(fillLight3);
+
+  const fillLight4 = new THREE.DirectionalLight(0xffcc00, 4.5);
+  fillLight4.position.set(18, 0.5, 3);
+  scene.add(fillLight4);
+
+  const fillLight5 = new THREE.DirectionalLight(0xff4488, 2.5);
+  fillLight5.position.set(0, 2, 20);
+  scene.add(fillLight5);
 
   // ── Textures sable ──
   const sandTexLoader = new THREE.TextureLoader();
