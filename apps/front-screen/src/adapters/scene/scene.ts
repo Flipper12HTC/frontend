@@ -141,11 +141,16 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   keyLight.shadow.radius        =  4;
   scene.add(keyLight);
 
-  scene.add(Object.assign(new THREE.DirectionalLight(0xff8833, 5.5), { position: new THREE.Vector3(-8, 18, 6) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0x0099ff, 4.0), { position: new THREE.Vector3(-10, 8, 16) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0x00ffee, 3.2), { position: new THREE.Vector3(-2, 14, -20) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0xffcc00, 4.5), { position: new THREE.Vector3(18, 0.5, 3) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0xff4488, 2.5), { position: new THREE.Vector3(0, 2, 20) }));
+  const addFill = (color: number, intensity: number, x: number, y: number, z: number) => {
+    const l = new THREE.DirectionalLight(color, intensity);
+    l.position.set(x, y, z);
+    scene.add(l);
+  };
+  addFill(0xff8833, 5.5,  -8,  18,   6);
+  addFill(0x0099ff, 4.0, -10,   8,  16);
+  addFill(0x00ffee, 3.2,  -2,  14, -20);
+  addFill(0xffcc00, 4.5,  18, 0.5,   3);
+  addFill(0xff4488, 2.5,   0,   2,  20);
 
   // ── Textures sable ──
   const sandTexLoader = new THREE.TextureLoader();
