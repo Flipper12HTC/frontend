@@ -41,17 +41,22 @@ const RENDER_HEIGHT = 1920;
 
 // ── Singleshots corail lumineux ──
 function createCoralSingleshots(root: THREE.Object3D): (t: number) => void {
-  const KEYWORDS      = ['singleshot', 'sling', 'guide', 'inlane', 'outlane', 'kicker'];
-  const CORAL_NAMES   = new Set([
-    'col_ref_plunger_003', 'col_ref_plunger_004', 'col_ref_plunger_006', 'col_ref_plunger_007', 'col_ref_plunger_009',
-    'col_ref_flipper_014', 'col_ref_flipper_030',
+  const KEYWORDS = ['singleshot', 'sling', 'guide', 'inlane', 'outlane', 'kicker'];
+  const CORAL_NAMES = new Set([
+    'col_ref_plunger_003',
+    'col_ref_plunger_004',
+    'col_ref_plunger_006',
+    'col_ref_plunger_007',
+    'col_ref_plunger_009',
+    'col_ref_flipper_014',
+    'col_ref_flipper_030',
   ]);
-  const SPONGE_NAMES  = new Set<string>();
+  const SPONGE_NAMES = new Set<string>();
 
   const coralMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0xff5522),
     roughness: 0.18,
-    metalness: 0.30,
+    metalness: 0.3,
     emissive: new THREE.Color(0xff2200),
     emissiveIntensity: 0.5,
     envMapIntensity: 1.6,
@@ -59,7 +64,7 @@ function createCoralSingleshots(root: THREE.Object3D): (t: number) => void {
 
   const spongeMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color(0xffe135),
-    roughness: 0.20,
+    roughness: 0.2,
     metalness: 0.25,
     emissive: new THREE.Color(0xffaa00),
     emissiveIntensity: 0.45,
@@ -79,7 +84,7 @@ function createCoralSingleshots(root: THREE.Object3D): (t: number) => void {
   return (t: number) => {
     const pulse = 0.28 + Math.sin(t * 1.6) * 0.22 + Math.sin(t * 2.9 + 1.2) * 0.08;
     coralMat.emissiveIntensity = pulse;
-    spongeMat.emissiveIntensity = 0.30 + Math.sin(t * 1.4 + 0.8) * 0.20 + Math.sin(t * 2.5) * 0.07;
+    spongeMat.emissiveIntensity = 0.3 + Math.sin(t * 1.4 + 0.8) * 0.2 + Math.sin(t * 2.5) * 0.07;
   };
 }
 
@@ -138,17 +143,17 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const keyLight = new THREE.DirectionalLight(0xffdd00, 13.0);
   keyLight.position.set(6, 28, -8);
   keyLight.castShadow = true;
-  keyLight.shadow.mapSize.width  = 2048;
+  keyLight.shadow.mapSize.width = 2048;
   keyLight.shadow.mapSize.height = 2048;
-  keyLight.shadow.camera.near   = 1;
-  keyLight.shadow.camera.far    = 90;
-  keyLight.shadow.camera.left   = -13;
-  keyLight.shadow.camera.right  =  13;
-  keyLight.shadow.camera.top    =  20;
+  keyLight.shadow.camera.near = 1;
+  keyLight.shadow.camera.far = 90;
+  keyLight.shadow.camera.left = -13;
+  keyLight.shadow.camera.right = 13;
+  keyLight.shadow.camera.top = 20;
   keyLight.shadow.camera.bottom = -20;
-  keyLight.shadow.bias          = -0.0003;
-  keyLight.shadow.normalBias    =  0.02;
-  keyLight.shadow.radius        =  4;
+  keyLight.shadow.bias = -0.0003;
+  keyLight.shadow.normalBias = 0.02;
+  keyLight.shadow.radius = 4;
   scene.add(keyLight);
 
   // NB: Object3D.position is a read-only property in three r150+ — assigning it
@@ -191,17 +196,17 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   sandNorm.repeat.set(5, 9);
 
   const sandMat = new THREE.MeshStandardMaterial({
-    map:           sandDiff,
-    normalMap:     sandNorm,
-    normalScale:   new THREE.Vector2(12.0, 12.0),
-    roughnessMap:  sandRough,
-    aoMap:         sandAO,
+    map: sandDiff,
+    normalMap: sandNorm,
+    normalScale: new THREE.Vector2(12.0, 12.0),
+    roughnessMap: sandRough,
+    aoMap: sandAO,
     aoMapIntensity: 1.8,
-    bumpMap:       sandBump,
-    bumpScale:     10.0,
-    roughness:     0.94,
-    metalness:     0.0,
-    side:          THREE.DoubleSide,
+    bumpMap: sandBump,
+    bumpScale: 10.0,
+    roughness: 0.94,
+    metalness: 0.0,
+    side: THREE.DoubleSide,
   });
 
   // ── Textures mur ──
@@ -215,7 +220,9 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   wallArm.wrapS = wallArm.wrapT = THREE.RepeatWrapping;
   wallArm.repeat.set(4, 2);
 
-  const wallNorm = wallTexLoader.load('/rough_block_wall_2k/textures/rough_block_wall_nor_gl_2k.jpg');
+  const wallNorm = wallTexLoader.load(
+    '/rough_block_wall_2k/textures/rough_block_wall_nor_gl_2k.jpg',
+  );
   wallNorm.wrapS = wallNorm.wrapT = THREE.RepeatWrapping;
   wallNorm.repeat.set(4, 2);
 
@@ -264,10 +271,12 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     metalness: 0.0,
   });
 
-  const GRASS_NAMES  = new Set(['col_wall_center']);
+  const GRASS_NAMES = new Set(['col_wall_center']);
   const CLOUDS_NAMES = new Set(['col_ref_floor_main', 'col_wall_left_fill', 'col_wall_main_outer']);
 
-  const cloudsTex = new THREE.TextureLoader().load('/Floral Background _Aquarium _ Terrarium Background.jpg');
+  const cloudsTex = new THREE.TextureLoader().load(
+    '/Floral Background _Aquarium _ Terrarium Background.jpg',
+  );
   cloudsTex.wrapS = cloudsTex.wrapT = THREE.RepeatWrapping;
   cloudsTex.colorSpace = THREE.SRGBColorSpace;
 
@@ -281,20 +290,24 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const logoTex = new THREE.TextureLoader().load('/bobfunny.png');
   logoTex.colorSpace = THREE.SRGBColorSpace;
   const logoMat = new THREE.MeshStandardMaterial({
-    map:              logoTex,
-    color:            new THREE.Color(0x666666),
-    transparent:      true,
-    alphaTest:        0.05,
-    roughness:        0.60,
-    metalness:        0.10,
+    map: logoTex,
+    color: new THREE.Color(0x666666),
+    transparent: true,
+    alphaTest: 0.05,
+    roughness: 0.6,
+    metalness: 0.1,
     emissiveIntensity: 0.0,
-    depthWrite:       false,
-    side:             THREE.DoubleSide,
+    depthWrite: false,
+    side: THREE.DoubleSide,
   });
 
-  const spongeMat    = createSpongeMaterial();
+  const spongeMat = createSpongeMaterial();
   const SPONGE_MESH_NAMES = new Set(['col_ramp_main']);
-  const CONCRETE_MESH_NAMES = new Set(['col_wall_frame_black', 'col_wall_panel', 'col_wall_shooter']);
+  const CONCRETE_MESH_NAMES = new Set([
+    'col_wall_frame_black',
+    'col_wall_panel',
+    'col_wall_shooter',
+  ]);
 
   const concreteTex = new THREE.TextureLoader().load('/photo-concrete-texture-pattern.jpg');
   concreteTex.wrapS = concreteTex.wrapT = THREE.RepeatWrapping;
@@ -314,10 +327,10 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     metalness: 0.0,
   });
 
-  let meshReadyCb:  ((meshes: PinballMeshes) => void) | null = null;
-  let debugBallCb:  ((pos: { x: number; y: number; z: number }) => void) | null = null;
+  let meshReadyCb: ((meshes: PinballMeshes) => void) | null = null;
+  let debugBallCb: ((pos: { x: number; y: number; z: number }) => void) | null = null;
   let debugGroupRef: { visible: boolean } | null = null;
-  let debugEnabled  = false;
+  let debugEnabled = false;
 
   const gltfLoader = new GLTFLoader();
   gltfLoader.load('/models/FlipperBase.glb', (gltf) => {
@@ -332,8 +345,8 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     if (preScaleRef.isEmpty()) preScaleRef.setFromObject(root);
 
     const rawSize = preScaleRef.getSize(new THREE.Vector3());
-    const sx = TABLE.width  / rawSize.x;
-    const sz = TABLE.depth  / rawSize.z;
+    const sx = TABLE.width / rawSize.x;
+    const sz = TABLE.depth / rawSize.z;
     const sy = (sx + sz) / 2;
     root.scale.set(sx, sy, sz);
     root.updateWorldMatrix(false, true);
@@ -358,18 +371,18 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     const playfield = root.getObjectByName('col_floor_playfield_blue');
     if (playfield instanceof THREE.Mesh) {
       const posAttr = playfield.geometry.attributes['position'] as THREE.BufferAttribute;
-      const count   = posAttr.count;
-      const uvArr   = new Float32Array(count * 2);
-      const wm      = playfield.matrixWorld;
-      const v       = new THREE.Vector3();
+      const count = posAttr.count;
+      const uvArr = new Float32Array(count * 2);
+      const wm = playfield.matrixWorld;
+      const v = new THREE.Vector3();
       for (let i = 0; i < count; i++) {
         v.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
         v.applyMatrix4(wm);
-        uvArr[i * 2]     = (v.x / TABLE.width  + 0.5) * 3;
-        uvArr[i * 2 + 1] = (v.z / TABLE.depth  + 0.5) * 5;
+        uvArr[i * 2] = (v.x / TABLE.width + 0.5) * 3;
+        uvArr[i * 2 + 1] = (v.z / TABLE.depth + 0.5) * 5;
       }
       const newUV = new THREE.BufferAttribute(uvArr, 2);
-      playfield.geometry.setAttribute('uv',  newUV);
+      playfield.geometry.setAttribute('uv', newUV);
       playfield.geometry.setAttribute('uv2', newUV.clone());
       playfield.material = sandMat;
     }
@@ -386,15 +399,21 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     const flipperMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0x0f0a01),
       roughness: 0.55,
-      metalness: 0.10,
+      metalness: 0.1,
     });
 
     root.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
       if (obj.name === 'col_floor_playfield_blue') return;
 
-      if (SPONGE_MESH_NAMES.has(obj.name)) { obj.material = spongeMat; return; }
-      if (obj.name === 'col_wall_frame_black') { obj.material = concreteFrameMat; return; }
+      if (SPONGE_MESH_NAMES.has(obj.name)) {
+        obj.material = spongeMat;
+        return;
+      }
+      if (obj.name === 'col_wall_frame_black') {
+        obj.material = concreteFrameMat;
+        return;
+      }
       if (obj.name === 'col_ref_plunger_star') {
         obj.material = new THREE.MeshStandardMaterial({
           color: new THREE.Color(0xff66cc),
@@ -415,9 +434,18 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
         });
         return;
       }
-      if (CONCRETE_MESH_NAMES.has(obj.name)) { obj.material = concreteMat; return; }
-      if (GRASS_NAMES.has(obj.name)) { obj.material = grassMat; return; }
-      if (CLOUDS_NAMES.has(obj.name)) { obj.material = cloudsMat; return; }
+      if (CONCRETE_MESH_NAMES.has(obj.name)) {
+        obj.material = concreteMat;
+        return;
+      }
+      if (GRASS_NAMES.has(obj.name)) {
+        obj.material = grassMat;
+        return;
+      }
+      if (CLOUDS_NAMES.has(obj.name)) {
+        obj.material = cloudsMat;
+        return;
+      }
       if (obj.name.toLowerCase().includes('wall') || obj.name.toLowerCase().includes('frame')) {
         obj.material = wallMat;
         return;
@@ -431,9 +459,10 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
 
     for (const name of ['flipper_left', 'flipper_right']) {
       const fObj = root.getObjectByName(name);
-      if (fObj) fObj.traverse((child) => {
-        if (child instanceof THREE.Mesh) child.material = flipperMat;
-      });
+      if (fObj)
+        fObj.traverse((child) => {
+          if (child instanceof THREE.Mesh) child.material = flipperMat;
+        });
     }
 
     // ── Reprojection UV planaire pour grass + sponge ──
@@ -443,27 +472,27 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
       const gobj = root.getObjectByName(meshName);
       if (!(gobj instanceof THREE.Mesh)) continue;
       const posAttr = gobj.geometry.attributes['position'] as THREE.BufferAttribute;
-      const cnt  = posAttr.count;
-      const uvA  = new Float32Array(cnt * 2);
-      const wm   = gobj.matrixWorld;
-      const vv   = new THREE.Vector3();
-      const bb   = new THREE.Box3().setFromObject(gobj);
-      const sz   = bb.getSize(new THREE.Vector3());
+      const cnt = posAttr.count;
+      const uvA = new Float32Array(cnt * 2);
+      const wm = gobj.matrixWorld;
+      const vv = new THREE.Vector3();
+      const bb = new THREE.Box3().setFromObject(gobj);
+      const sz = bb.getSize(new THREE.Vector3());
       const isFloor = sz.y < sz.x * 0.4 && sz.y < sz.z * 0.4;
       for (let i = 0; i < cnt; i++) {
         vv.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
         vv.applyMatrix4(wm);
         if (isFloor) {
-          uvA[i * 2]     = vv.x * GRASS_FREQ;
+          uvA[i * 2] = vv.x * GRASS_FREQ;
           uvA[i * 2 + 1] = vv.z * GRASS_FREQ;
         } else {
           const u = sz.x >= sz.z ? vv.x : vv.z;
-          uvA[i * 2]     = u    * GRASS_FREQ;
+          uvA[i * 2] = u * GRASS_FREQ;
           uvA[i * 2 + 1] = vv.y * GRASS_FREQ;
         }
       }
       const newUV = new THREE.BufferAttribute(uvA, 2);
-      gobj.geometry.setAttribute('uv',  newUV);
+      gobj.geometry.setAttribute('uv', newUV);
       gobj.geometry.setAttribute('uv2', newUV.clone());
     }
 
@@ -474,28 +503,28 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
       const posAttr = gobj.geometry.attributes['position'] as THREE.BufferAttribute;
       const cnt = posAttr.count;
       const uvA = new Float32Array(cnt * 2);
-      const wm  = gobj.matrixWorld;
-      const vv  = new THREE.Vector3();
-      const bb  = new THREE.Box3().setFromObject(gobj);
-      const sz  = bb.getSize(new THREE.Vector3());
+      const wm = gobj.matrixWorld;
+      const vv = new THREE.Vector3();
+      const bb = new THREE.Box3().setFromObject(gobj);
+      const sz = bb.getSize(new THREE.Vector3());
       const isFloor = sz.y < sz.x * 0.4 && sz.y < sz.z * 0.4;
       for (let i = 0; i < cnt; i++) {
         vv.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
         vv.applyMatrix4(wm);
         const CLOUDS_SCALE = 3.0;
         if (isFloor) {
-          uvA[i * 2]     = ((vv.x - bb.min.x) / sz.x) * CLOUDS_SCALE;
+          uvA[i * 2] = ((vv.x - bb.min.x) / sz.x) * CLOUDS_SCALE;
           uvA[i * 2 + 1] = ((vv.z - bb.min.z) / sz.z) * CLOUDS_SCALE;
         } else {
           const u = sz.x >= sz.z ? vv.x : vv.z;
           const uMin = sz.x >= sz.z ? bb.min.x : bb.min.z;
-          const uSz  = sz.x >= sz.z ? sz.x : sz.z;
-          uvA[i * 2]     = ((u    - uMin)    / uSz) * CLOUDS_SCALE;
+          const uSz = sz.x >= sz.z ? sz.x : sz.z;
+          uvA[i * 2] = ((u - uMin) / uSz) * CLOUDS_SCALE;
           uvA[i * 2 + 1] = ((vv.y - bb.min.y) / sz.y) * CLOUDS_SCALE;
         }
       }
       const newUV = new THREE.BufferAttribute(uvA, 2);
-      gobj.geometry.setAttribute('uv',  newUV);
+      gobj.geometry.setAttribute('uv', newUV);
       gobj.geometry.setAttribute('uv2', newUV.clone());
     }
 
@@ -507,25 +536,25 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
       const posAttr = gobj.geometry.attributes['position'] as THREE.BufferAttribute;
       const cnt = posAttr.count;
       const uvA = new Float32Array(cnt * 2);
-      const wm  = gobj.matrixWorld;
-      const vv  = new THREE.Vector3();
-      const bb  = new THREE.Box3().setFromObject(gobj);
-      const sz  = bb.getSize(new THREE.Vector3());
+      const wm = gobj.matrixWorld;
+      const vv = new THREE.Vector3();
+      const bb = new THREE.Box3().setFromObject(gobj);
+      const sz = bb.getSize(new THREE.Vector3());
       const isFloor = sz.y < sz.x * 0.4 && sz.y < sz.z * 0.4;
       for (let i = 0; i < cnt; i++) {
         vv.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
         vv.applyMatrix4(wm);
         if (isFloor) {
-          uvA[i * 2]     = vv.x * CONCRETE_FREQ;
+          uvA[i * 2] = vv.x * CONCRETE_FREQ;
           uvA[i * 2 + 1] = vv.z * CONCRETE_FREQ;
         } else {
           const u = sz.x >= sz.z ? vv.x : vv.z;
-          uvA[i * 2]     = u    * CONCRETE_FREQ;
+          uvA[i * 2] = u * CONCRETE_FREQ;
           uvA[i * 2 + 1] = vv.y * CONCRETE_FREQ;
         }
       }
       const newUV = new THREE.BufferAttribute(uvA, 2);
-      gobj.geometry.setAttribute('uv',  newUV);
+      gobj.geometry.setAttribute('uv', newUV);
       gobj.geometry.setAttribute('uv2', newUV.clone());
     }
 
@@ -537,39 +566,41 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
         const posAttr = gobj.geometry.attributes['position'] as THREE.BufferAttribute;
         const cnt = posAttr.count;
         const uvA = new Float32Array(cnt * 2);
-        const wm  = gobj.matrixWorld;
-        const vv  = new THREE.Vector3();
+        const wm = gobj.matrixWorld;
+        const vv = new THREE.Vector3();
         for (let i = 0; i < cnt; i++) {
           vv.set(posAttr.getX(i) ?? 0, posAttr.getY(i) ?? 0, posAttr.getZ(i) ?? 0);
           vv.applyMatrix4(wm);
-          uvA[i * 2]     = vv.x * FRAME_FREQ;
+          uvA[i * 2] = vv.x * FRAME_FREQ;
           uvA[i * 2 + 1] = vv.z * FRAME_FREQ;
         }
         const newUV = new THREE.BufferAttribute(uvA, 2);
-        gobj.geometry.setAttribute('uv',  newUV);
+        gobj.geometry.setAttribute('uv', newUV);
         gobj.geometry.setAttribute('uv2', newUV.clone());
       }
     }
 
     const meshNames: string[] = [];
-    root.traverse((o) => { if (o instanceof THREE.Mesh) meshNames.push(o.name); });
+    root.traverse((o) => {
+      if (o instanceof THREE.Mesh) meshNames.push(o.name);
+    });
     console.log('[GLB meshes]', meshNames);
 
     tickSingleshots = createCoralSingleshots(root);
 
     root.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
-        obj.castShadow    = true;
+        obj.castShadow = true;
         obj.receiveShadow = true;
       }
     });
 
     const debug = createPhysicsDebug(root);
     scene.add(debug.group);
-    debugBallCb   = debug.updateBall;
+    debugBallCb = debug.updateBall;
     debugGroupRef = debug.group;
 
-    const flipperLeft  = root.getObjectByName('flipper_left');
+    const flipperLeft = root.getObjectByName('flipper_left');
     const flipperRight = root.getObjectByName('flipper_right');
     if (flipperLeft && flipperRight && meshReadyCb) {
       meshReadyCb({ flipperLeft, flipperRight });
@@ -577,22 +608,22 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
 
     // ── Décorations calées sur la surface inclinée du playfield ──
     {
-      const ray  = new THREE.Raycaster();
+      const ray = new THREE.Raycaster();
       const down = new THREE.Vector3(0, -1, 0);
 
       function rawHit(x: number, z: number): number | null {
         ray.set(new THREE.Vector3(x, 20, z), down);
         const hits = ray.intersectObject(root, true);
-        const hit = hits.find(h => (h.face?.normal.y ?? 0) > 0.3) ?? hits[0];
+        const hit = hits.find((h) => (h.face?.normal.y ?? 0) > 0.3) ?? hits[0];
         return hit ? hit.point.y + 0.015 : null;
       }
 
-      const yNear = rawHit(0,  6) ?? 0.40;
-      const yFar  = rawHit(0, -6) ?? 1.70;
-      const slope = (yFar - yNear) / (-12);
+      const yNear = rawHit(0, 6) ?? 0.4;
+      const yFar = rawHit(0, -6) ?? 1.7;
+      const slope = (yFar - yNear) / -12;
 
       function sampleFloorY(x: number, z: number): number {
-        return rawHit(x, z) ?? (yNear + slope * (z - 6));
+        return rawHit(x, z) ?? yNear + slope * (z - 6);
       }
 
       const floor: FloorSampler = {
@@ -601,70 +632,82 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
       };
 
       jellyfishBumpers = createJellyfishBumpers(scene, ['b2', 'b3'], floor.getY);
-      tickInserts      = createInsertLights(scene, floor);
-      tickCaustics     = createCausticOverlay(scene, floor);
+      tickInserts = createInsertLights(scene, floor);
+      tickCaustics = createCausticOverlay(scene, floor);
       tickCausticLights = createCausticLights(scene);
-      tickPuddles      = createWaterPuddles(scene, floor);
-      tickSand         = createSandRipples(scene, floor, sandNorm);
+      tickPuddles = createWaterPuddles(scene, floor);
+      tickSand = createSandRipples(scene, floor, sandNorm);
       createSandDetail(scene, floor, sandDiff);
 
       // ── Maison Squidward ──
       {
-        const SQ_X = 3.5, SQ_Z = -6.0;
+        const SQ_X = 3.5,
+          SQ_Z = -6.0;
         const sqLoader = new GLTFLoader();
-        sqLoader.load('/models/sponge_bob_hero_pants_squidwards_house.glb', (gltf) => {
-          const model = gltf.scene;
-          const box = new THREE.Box3().setFromObject(model);
-          const size = box.getSize(new THREE.Vector3());
-          const maxDim = Math.max(size.x, size.y, size.z);
-          const scale = 1.6 / maxDim;
-          model.scale.setScalar(scale);
-          model.position.set(SQ_X, floor.getY(SQ_X, SQ_Z) - box.min.y * scale, SQ_Z);
-          model.traverse((obj) => {
-            if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
-              obj.material = obj.material.clone();
-              obj.material.color.multiplyScalar(0.55);
-            }
-          });
-          scene.add(model);
-        }, undefined, (err) => {
-          console.error('[squidward-house] failed to load', err);
-        });
+        sqLoader.load(
+          '/models/sponge_bob_hero_pants_squidwards_house.glb',
+          (gltf) => {
+            const model = gltf.scene;
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 1.6 / maxDim;
+            model.scale.setScalar(scale);
+            model.position.set(SQ_X, floor.getY(SQ_X, SQ_Z) - box.min.y * scale, SQ_Z);
+            model.traverse((obj) => {
+              if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+                obj.material = obj.material.clone();
+                obj.material.color.multiplyScalar(0.55);
+              }
+            });
+            scene.add(model);
+          },
+          undefined,
+          (err) => {
+            console.error('[squidward-house] failed to load', err);
+          },
+        );
       }
 
       // ── Maison SpongeBob ──
       {
-        const SB_X = -3.18, SB_Z = -6.35;
+        const SB_X = -3.18,
+          SB_Z = -6.35;
         const sbLoader = new GLTFLoader();
-        sbLoader.load('/models/sponge_bob_hero_pants_sponge_bobs_house.glb', (gltf) => {
-          const model = gltf.scene;
-          const box = new THREE.Box3().setFromObject(model);
-          const size = box.getSize(new THREE.Vector3());
-          const maxDim = Math.max(size.x, size.y, size.z);
-          const scale = 1.2 / maxDim;
-          model.scale.setScalar(scale);
-          model.position.set(SB_X, floor.getY(SB_X, SB_Z) - box.min.y * scale, SB_Z);
-          model.traverse((obj) => {
-            if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
-              obj.material = obj.material.clone();
-              obj.material.color.multiplyScalar(0.25);
-            }
-          });
-          scene.add(model);
-        }, undefined, (err) => {
-          console.error('[spongebob-house] failed to load', err);
-        });
+        sbLoader.load(
+          '/models/sponge_bob_hero_pants_sponge_bobs_house.glb',
+          (gltf) => {
+            const model = gltf.scene;
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 1.2 / maxDim;
+            model.scale.setScalar(scale);
+            model.position.set(SB_X, floor.getY(SB_X, SB_Z) - box.min.y * scale, SB_Z);
+            model.traverse((obj) => {
+              if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+                obj.material = obj.material.clone();
+                obj.material.color.multiplyScalar(0.25);
+              }
+            });
+            scene.add(model);
+          },
+          undefined,
+          (err) => {
+            console.error('[spongebob-house] failed to load', err);
+          },
+        );
       }
 
       // ── Logo Flipper12 peint sur le sol ──
       {
         const wallCenter = root.getObjectByName('col_wall_center');
         if (wallCenter instanceof THREE.Mesh) {
-          const bb  = new THREE.Box3().setFromObject(wallCenter);
+          const bb = new THREE.Box3().setFromObject(wallCenter);
           const ctr = bb.getCenter(new THREE.Vector3());
-          const sz  = bb.getSize(new THREE.Vector3());
-          const w   = Math.max(sz.x, sz.z) * 0.45;
-          const h   = Math.min(sz.x, sz.z) * 0.45;
+          const sz = bb.getSize(new THREE.Vector3());
+          const w = Math.max(sz.x, sz.z) * 0.45;
+          const h = Math.min(sz.x, sz.z) * 0.45;
 
           const logoPlane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), logoMat);
           logoPlane.rotation.x = floor.rotX;
@@ -677,16 +720,16 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   });
 
   // ── Effets de fond (indépendants du sol) ──
-  const tickBubblesLarge    = createBubbleLayer(scene, 30,  0.30, 0.45);
-  const tickBubblesSmall    = createBubbleLayer(scene, 70, 0.15, 0.30);
-  let tickInserts:      (t: number) => void = () => {};
-  let tickCaustics:     (t: number) => void = () => {};
-  let tickCausticLights:(t: number) => void = () => {};
-  let tickPuddles:      (t: number) => void = () => {};
-  let tickSingleshots:  (t: number) => void = () => {};
-  let tickSand:         (t: number) => void = () => {};
+  const tickBubblesLarge = createBubbleLayer(scene, 30, 0.3, 0.45);
+  const tickBubblesSmall = createBubbleLayer(scene, 70, 0.15, 0.3);
+  let tickInserts: (t: number) => void = () => {};
+  let tickCaustics: (t: number) => void = () => {};
+  let tickCausticLights: (t: number) => void = () => {};
+  let tickPuddles: (t: number) => void = () => {};
+  let tickSingleshots: (t: number) => void = () => {};
+  let tickSand: (t: number) => void = () => {};
   const tickSky = createOceanSky(scene);
-  const trail   = createBallTrail(scene);
+  const trail = createBallTrail(scene);
   let jellyfishBumpers: JellyfishBumpers = { hit: () => {}, tick: () => {} };
 
   // ── Camera shake ──
@@ -697,11 +740,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     if (shakeElapsed > 0) {
       shakeElapsed = Math.max(0, shakeElapsed - dt);
       const factor = (shakeElapsed / 0.28) * 0.6;
-      shakeOffset.set(
-        (Math.random() - 0.5) * factor,
-        0,
-        (Math.random() - 0.5) * factor,
-      );
+      shakeOffset.set((Math.random() - 0.5) * factor, 0, (Math.random() - 0.5) * factor);
     } else if (shakeOffset.lengthSq() > 0) {
       shakeOffset.set(0, 0, 0);
     }
@@ -714,7 +753,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
 
   function render(): void {
     const now = performance.now();
-    const dt  = Math.min(0.05, (now - lastRenderMs) / 1000);
+    const dt = Math.min(0.05, (now - lastRenderMs) / 1000);
     lastRenderMs = now;
     const t = (now - startTime) * 0.001;
 
@@ -736,10 +775,10 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const pickRaycaster = new THREE.Raycaster();
   canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = RENDER_WIDTH  / rect.width;
+    const scaleX = RENDER_WIDTH / rect.width;
     const scaleY = RENDER_HEIGHT / rect.height;
-    const ndcX =  ((e.clientX - rect.left) * scaleX / RENDER_WIDTH)  * 2 - 1;
-    const ndcY = -((e.clientY - rect.top)  * scaleY / RENDER_HEIGHT) * 2 + 1;
+    const ndcX = (((e.clientX - rect.left) * scaleX) / RENDER_WIDTH) * 2 - 1;
+    const ndcY = -(((e.clientY - rect.top) * scaleY) / RENDER_HEIGHT) * 2 + 1;
     pickRaycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
     const hits = pickRaycaster.intersectObjects(scene.children, true);
     const hit = hits.find((h) => h.object instanceof THREE.Mesh && h.object.name !== '');
@@ -760,14 +799,24 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     renderer,
     render,
     resize,
-    onMeshesReady(cb) { meshReadyCb = cb; },
+    onMeshesReady(cb) {
+      meshReadyCb = cb;
+    },
     toggleDebug() {
       debugEnabled = !debugEnabled;
       if (debugGroupRef) debugGroupRef.visible = debugEnabled;
     },
-    updateDebugBall(pos) { debugBallCb?.(pos); },
-    addBallTrail(pos) { trail.add(pos); },
-    triggerShake() { shakeElapsed = 0.28; },
-    get jellyfishBumpers() { return jellyfishBumpers; },
+    updateDebugBall(pos) {
+      debugBallCb?.(pos);
+    },
+    addBallTrail(pos) {
+      trail.add(pos);
+    },
+    triggerShake() {
+      shakeElapsed = 0.28;
+    },
+    get jellyfishBumpers() {
+      return jellyfishBumpers;
+    },
   };
 }

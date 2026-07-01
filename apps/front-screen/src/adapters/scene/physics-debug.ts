@@ -2,12 +2,12 @@ import * as THREE from 'three';
 import { TABLE } from '@flipper/contracts';
 
 // Colors per collider type
-const C_WALL    = 0x00ff00; // green   — GLB trimesh walls
-const C_RAMP    = 0x00ffaa; // teal    — GLB ramp (all-face collider)
-const C_BOX     = 0xff00ff; // magenta — procedural box walls + GLB floor meshes
-const C_BUMPER  = 0xffff00; // yellow  — bumper cylinders
+const C_WALL = 0x00ff00; // green   — GLB trimesh walls
+const C_RAMP = 0x00ffaa; // teal    — GLB ramp (all-face collider)
+const C_BOX = 0xff00ff; // magenta — procedural box walls + GLB floor meshes
+const C_BUMPER = 0xffff00; // yellow  — bumper cylinders
 const C_FLIPPER = 0xff6600; // orange  — flippers
-const C_BALL    = 0x00ffff; // cyan    — ball sphere
+const C_BALL = 0x00ffff; // cyan    — ball sphere
 
 // Mirrors WALL_MESHES patterns from backend glb-loader.ts (substring match).
 const WALL_PATTERNS = [
@@ -34,7 +34,10 @@ function isRampMesh(name: string): boolean {
 
 // Floor meshes — mirrors FLOOR_MESHES in glb-loader.ts (exact node names, case-sensitive)
 function isSolMesh(name: string): boolean {
-  return (name.startsWith('col_floor_') || name.startsWith('col_ref_floor_')) && name !== 'col_floor_base';
+  return (
+    (name.startsWith('col_floor_') || name.startsWith('col_ref_floor_')) &&
+    name !== 'col_floor_base'
+  );
 }
 
 function wire(geo: THREE.BufferGeometry, color: number): THREE.LineSegments {
@@ -82,16 +85,17 @@ export function createPhysicsDebug(glbRoot: THREE.Object3D): PhysicsDebugOverlay
   glbRoot.traverse((obj) => {
     if (!(obj instanceof THREE.Mesh)) return;
 
-    if (isWallMesh(obj.name))                              group.add(glbWire(obj, C_WALL));
-    else if (isRampMesh(obj.name))                         group.add(glbWire(obj, C_RAMP));
-    else if (isSolMesh(obj.name))                          group.add(glbWire(obj, C_BOX));
-    else if (obj.name.includes('col_bumper_group'))        group.add(glbWire(obj, C_BUMPER));
-    else if (obj.name === 'flipper_left' || obj.name === 'flipper_right') group.add(glbWire(obj, C_FLIPPER));
+    if (isWallMesh(obj.name)) group.add(glbWire(obj, C_WALL));
+    else if (isRampMesh(obj.name)) group.add(glbWire(obj, C_RAMP));
+    else if (isSolMesh(obj.name)) group.add(glbWire(obj, C_BOX));
+    else if (obj.name.includes('col_bumper_group')) group.add(glbWire(obj, C_BUMPER));
+    else if (obj.name === 'flipper_left' || obj.name === 'flipper_right')
+      group.add(glbWire(obj, C_FLIPPER));
   });
 
   // --- Procedural box walls (same params as rapier-world.ts buildBoundaryWalls) ---
-  const halfW = TABLE.width / 2;   // 4.5
-  const halfD = TABLE.depth / 2;   // 8.0
+  const halfW = TABLE.width / 2; // 4.5
+  const halfD = TABLE.depth / 2; // 8.0
   const halfH = TABLE.wall.height / 2;
   const t = 0.15;
 

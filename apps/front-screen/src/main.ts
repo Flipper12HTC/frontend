@@ -30,8 +30,17 @@ document.body.appendChild(coordsDiv);
 
 let debugActive = false;
 
-const { scene, render, resize, onMeshesReady, toggleDebug, updateDebugBall, addBallTrail, triggerShake, jellyfishBumpers } =
-  createScene(canvas);
+const {
+  scene,
+  render,
+  resize,
+  onMeshesReady,
+  toggleDebug,
+  updateDebugBall,
+  addBallTrail,
+  triggerShake,
+  jellyfishBumpers,
+} = createScene(canvas);
 const ball = createBall(scene);
 const source: GameSource = new WsGameSource({ url: WS_URL });
 
@@ -50,8 +59,7 @@ const orchestrator = createRendererOrchestrator(source, {
     updateDebugBall(position);
     addBallTrail(position);
     if (debugActive) {
-      coordsDiv.textContent =
-        `X: ${position.x.toFixed(3)}  Y: ${position.y.toFixed(3)}  Z: ${position.z.toFixed(3)}`;
+      coordsDiv.textContent = `X: ${position.x.toFixed(3)}  Y: ${position.y.toFixed(3)}  Z: ${position.z.toFixed(3)}`;
     }
   },
   onFlipperChanged(state) {

@@ -11,7 +11,7 @@ export interface Ball {
 export function createBall(scene: THREE.Scene): Ball {
   const geo = new THREE.SphereGeometry(TABLE.ball.radius * 1.0, 32, 32);
   const mat = new THREE.MeshStandardMaterial({
-    color: 0xffd700,        // jaune doré SpongeBob
+    color: 0xffd700, // jaune doré SpongeBob
     roughness: 0.05,
     metalness: 0.92,
     emissive: new THREE.Color(0xff9900),

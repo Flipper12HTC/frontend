@@ -23,9 +23,7 @@ export function createLeaderboardView(): LeaderboardView {
   root.appendChild(title);
 
   const list = document.createElement('ol');
-  list.className =
-    'flex flex-col w-full max-w-[80vw] gap-2 ' +
-    'text-[clamp(1rem,2.2vw,2rem)]';
+  list.className = 'flex flex-col w-full max-w-[80vw] gap-2 ' + 'text-[clamp(1rem,2.2vw,2rem)]';
   root.appendChild(list);
 
   return {
