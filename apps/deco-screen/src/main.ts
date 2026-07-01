@@ -5,9 +5,18 @@ import { createParticleEffects } from './adapters/effects/particles';
 import { createLeaderboardView } from './adapters/components/leaderboard-view';
 import { MockGameSource, WsGameSource } from '@flipper/game-sources';
 
-const WS_URL = 'ws://localhost:8080/ws';
+// Same-origin by default: the cabinet serves each screen from its own nginx,
+// which reverse-proxies /ws, /game and /scores to the backend service. In dev
+// (vite) we fall back to the local backend on :8080. Override with
+// VITE_BACKEND_URL / VITE_WS_URL at build time if ever needed.
 const BACKEND_URL =
-  (import.meta.env.VITE_BACKEND_URL as string | undefined) ?? 'http://localhost:8080';
+  (import.meta.env.VITE_BACKEND_URL as string | undefined) ??
+  (import.meta.env.DEV ? 'http://localhost:8080' : '');
+const WS_URL =
+  (import.meta.env.VITE_WS_URL as string | undefined) ??
+  (BACKEND_URL
+    ? `${BACKEND_URL.replace(/^http/, 'ws')}/ws`
+    : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`);
 
 function pickSource(): GameSource {
   const kind = import.meta.env.VITE_GAME_SOURCE ?? (import.meta.env.DEV ? 'mock' : 'ws');

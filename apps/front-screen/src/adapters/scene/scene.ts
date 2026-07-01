@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader, OrbitControls, RoomEnvironment } from 'three/examples/jsm/Addons.js';
+import { GLTFLoader, RoomEnvironment } from 'three/examples/jsm/Addons.js';
 import { TABLE } from '@flipper/contracts';
 import { createPhysicsDebug } from './physics-debug';
 import { createJellyfishBumpers, type JellyfishBumpers } from '../meshes/jellyfish-bumpers';
@@ -91,13 +91,12 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   scene.background = new THREE.Color(0x1a7ab8);
   scene.fog = new THREE.FogExp2(0x1a6a9a, 0.005);
 
-  const camera = new THREE.PerspectiveCamera(55, RENDER_WIDTH / RENDER_HEIGHT, 0.1, 1000);
-  camera.position.set(0, 32, 36);
-  camera.lookAt(0, 0, 0);
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
+  // Top-down view: look straight down, with world -Z (the far end of the table)
+  // pointing to the top of the screen.
+  camera.up.set(0, 0, -1);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(1);
-  renderer.setSize(RENDER_WIDTH, RENDER_HEIGHT, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.45;
@@ -109,17 +108,28 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   scene.environmentIntensity = 0.55;
   pmrem.dispose();
 
-  const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.enableRotate  = true;
-  controls.enablePan     = true;
-  controls.enableZoom    = true;
-  controls.minDistance   = 4;
-  controls.maxDistance   = 60;
-  controls.maxPolarAngle = Math.PI * 0.46;
-  controls.target.set(0, 0, 0);
-  controls.update();
+  // Fixed, locked top-down camera centred on the playfield — no OrbitControls,
+  // the cabinet view must not move. fitCamera() picks the height so the whole
+  // table fills the current viewport; it runs on init and on every resize.
+  const VIEW_CENTER = new THREE.Vector3(0, 0, -0.5);
+  const TABLE_HALF_X = 5.2; // playfield width/2 + margin
+  const TABLE_HALF_Z = 8.6; // playfield depth/2 + margin
+
+  function fitCamera(): void {
+    const aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = aspect;
+    const vHalf = (camera.fov * Math.PI) / 360; // half vertical FOV (rad)
+    const distForDepth = TABLE_HALF_Z / Math.tan(vHalf);
+    const hHalf = Math.atan(Math.tan(vHalf) * aspect);
+    const distForWidth = TABLE_HALF_X / Math.tan(hHalf);
+    camera.position.set(VIEW_CENTER.x, Math.max(distForDepth, distForWidth), VIEW_CENTER.z);
+    camera.lookAt(VIEW_CENTER);
+    camera.updateProjectionMatrix();
+  }
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight, true);
+  fitCamera();
 
   // ── Éclairage Bikini Bottom ──
   scene.add(new THREE.HemisphereLight(0x00ccff, 0xffdd66, 2.8));
@@ -141,11 +151,19 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   keyLight.shadow.radius        =  4;
   scene.add(keyLight);
 
-  scene.add(Object.assign(new THREE.DirectionalLight(0xff8833, 5.5), { position: new THREE.Vector3(-8, 18, 6) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0x0099ff, 4.0), { position: new THREE.Vector3(-10, 8, 16) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0x00ffee, 3.2), { position: new THREE.Vector3(-2, 14, -20) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0xffcc00, 4.5), { position: new THREE.Vector3(18, 0.5, 3) }));
-  scene.add(Object.assign(new THREE.DirectionalLight(0xff4488, 2.5), { position: new THREE.Vector3(0, 2, 20) }));
+  // NB: Object3D.position is a read-only property in three r150+ — assigning it
+  // (e.g. via Object.assign(light, { position })) throws "Cannot assign to read
+  // only property 'position'". Set it through the Vector3 instead.
+  const addDirLight = (color: number, intensity: number, x: number, y: number, z: number): void => {
+    const light = new THREE.DirectionalLight(color, intensity);
+    light.position.set(x, y, z);
+    scene.add(light);
+  };
+  addDirLight(0xff8833, 5.5, -8, 18, 6);
+  addDirLight(0x0099ff, 4.0, -10, 8, 16);
+  addDirLight(0x00ffee, 3.2, -2, 14, -20);
+  addDirLight(0xffcc00, 4.5, 18, 0.5, 3);
+  addDirLight(0xff4488, 2.5, 0, 2, 20);
 
   // ── Textures sable ──
   const sandTexLoader = new THREE.TextureLoader();
@@ -676,22 +694,19 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   const shakeOffset = new THREE.Vector3();
 
   function applyShake(dt: number): void {
-    if (shakeElapsed <= 0) {
-      if (shakeOffset.lengthSq() > 0) {
-        controls.target.sub(shakeOffset);
-        shakeOffset.set(0, 0, 0);
-      }
-      return;
+    if (shakeElapsed > 0) {
+      shakeElapsed = Math.max(0, shakeElapsed - dt);
+      const factor = (shakeElapsed / 0.28) * 0.6;
+      shakeOffset.set(
+        (Math.random() - 0.5) * factor,
+        0,
+        (Math.random() - 0.5) * factor,
+      );
+    } else if (shakeOffset.lengthSq() > 0) {
+      shakeOffset.set(0, 0, 0);
     }
-    shakeElapsed = Math.max(0, shakeElapsed - dt);
-    const factor = (shakeElapsed / 0.28) * 0.12;
-    controls.target.sub(shakeOffset);
-    shakeOffset.set(
-      (Math.random() - 0.5) * factor,
-      0,
-      (Math.random() - 0.5) * factor,
-    );
-    controls.target.add(shakeOffset);
+    // Locked camera: jitter only the look-at target, never the position.
+    camera.lookAt(VIEW_CENTER.x + shakeOffset.x, VIEW_CENTER.y, VIEW_CENTER.z + shakeOffset.z);
   }
 
   const startTime = performance.now();
@@ -703,7 +718,6 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     lastRenderMs = now;
     const t = (now - startTime) * 0.001;
 
-    controls.update();
     tickBubblesLarge(t);
     tickBubblesSmall(t);
     tickInserts(t);
@@ -735,7 +749,9 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   });
 
   function resize(): void {
-    // Résolution fixe — le CSS letterboxe pour s'adapter à l'écran.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight, true);
+    fitCamera();
   }
 
   return {
